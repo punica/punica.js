@@ -21,6 +21,8 @@ class Endpoint extends EventEmitter {
         this.observations[id](code, data);
       }
     });
+
+    service.attachEndpoint(this);
   }
 
   getObjects() {
@@ -121,6 +123,11 @@ class Service extends EventEmitter {
 
     return this.endpoints[id]; 
   }
+
+  attachEndpoint(ep) {
+    this.endpoints[ep.id] = ep;
+  }
 }
 
 module.exports.Service = Service;
+module.exports.Device = Endpoint;
