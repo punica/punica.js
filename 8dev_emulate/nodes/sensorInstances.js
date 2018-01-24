@@ -50,15 +50,21 @@ class Sensor4400 extends ClientNode {
     this.objects['3200/0'].addResource(5500, 'R', RESOURCE_TYPE.BOOLEAN, false);
     this.objects['3200/0'].addResource(5501, 'R', RESOURCE_TYPE.INTEGER, 0);
     this.objects['3303/0'].addResource(5700, 'R', RESOURCE_TYPE.FLOAT, 20.0, temperatureSensorHandler);
+
+    this.objects['3200/0'].resources['5500'].on('change', () => {
+      this.objects['3200/0'].getResourceValue(5501, (hallSensorCounterValue) => {
+        this.objects['3200/0'].writeResource(5501, (hallSensorCounterValue + 1) % (2 ** 31), true);
+      });
+    });
+  }
+
+  hallSensorState(newState) {
+    this.objects['3200/0'].writeResource(5500, newState, true);
   }
 
   hallSensorTrigger() {
-    const that = this;
     this.objects['3200/0'].getResourceValue(5500, (hallSensorValue) => {
-      that.objects['3200/0'].writeResource(5500, !hallSensorValue, true);
-      that.objects['3200/0'].getResourceValue(5501, (hallSensorCounterValue) => {
-        that.objects['3200/0'].writeResource(5501, (hallSensorCounterValue + 1) % (2 ** 31), true);
-      });
+      this.objects['3200/0'].writeResource(5500, !hallSensorValue, true);
     });
   }
 }
