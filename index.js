@@ -7,7 +7,18 @@ const restAPI = require('./8dev_restapi.js');
 const sensorAPI = require('./8dev_sensors.js');
 
 const service = new restAPI.Service({ host: 'http://localhost:8888'});
-const ids = ['8dev4400_random61s'];
+const ids = [ // sensors used in the demo, comment out to disable
+  '8dev4400_open',        // always in open state
+  '8dev4400_closed',      // always in closed state
+  '8dev4400_toggle9s',    // toggles state every 9 seconds
+  '8dev4400_toggle47s',   // toggles state every 47 seconds
+  '8dev4400_toggle293s',  // toggles state every 293 seconds
+  '8dev4400_trigger7s',   // triggers open state every 7 seconds
+  '8dev4400_trigger43s',  // triggers open state every 43 seconds
+  '8dev4400_trigger251s', // triggers open state every 251 seconds
+  '8dev4400_random61s',   // triggers open state randomly (max 61 seconds)
+  '8dev4400_random397s',  // triggers open state randomly (max 397 seconds)
+];
 
 var sensors = Array(ids.length);
 var systemArmed = false;
