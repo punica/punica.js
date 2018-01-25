@@ -108,8 +108,11 @@ class Service extends EventEmitter {
       }
     }
 
-    for (let i = 0; i < events['async-responses'].length; i++) {
-      let res = events['async-responses'][i];
+    let responses = events['async-responses'].sort((x, y) => {
+      return x['timestamp'] - y['timestamp'];
+    });
+    for (let i = 0; i < responses.length; i++) {
+      let res = responses[i];
       console.log('Async-response:', res);
       this.emit('async-response', res);
     }
