@@ -3,9 +3,10 @@
 const { ResourceInstance } = require('./resourceInstance.js');
 
 class ObjectInstance {
-  constructor(objectID, instanceID) {
+  constructor(objectID, instanceID, hidden = false) {
     this.objectID = objectID;
     this.instanceId = instanceID;
+    this.hidden = hidden;
     this.resources = {};
   }
 

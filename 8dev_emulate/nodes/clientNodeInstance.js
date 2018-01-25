@@ -41,8 +41,8 @@ class ClientNodeInstance {
     this.initiateConnectivityStatisticsObject();
   }
 
-  createObject(objectID, instanceID) {
-    this.objects[`${objectID}/${instanceID}`] = new ObjectInstance(objectID, instanceID);
+  createObject(objectID, instanceID, hidden) {
+    this.objects[`${objectID}/${instanceID}`] = new ObjectInstance(objectID, instanceID, hidden);
   }
 
   addResource(objectID, instanceID, resourceID, access, type, handler) {
@@ -52,27 +52,31 @@ class ClientNodeInstance {
   getObjectInstancesList() {
     const objectInstancesList = [];
     for (const key in this.objects) {
+      if (this.objects[key].hidden === true) {
+        continue;
+      }
       if (Object.prototype.hasOwnProperty.call(this.objects, key)) {
         objectInstancesList.push(`<${key}>`);
       }
     }
+ 
     return objectInstancesList;
   }
 
   initiateSecurityObject(serverURI, clientPSK = null, publicKey = null, serverRPK = null, secretKey = null) {
-    this.createObject(0, 0);
+    this.createObject(0, 0, true);
     // LwM2M Server URI
-    this.objects['0/0'].addResource(0, 'RW', RESOURCE_TYPE.STRING, serverURI);
+    this.objects['0/0'].addResource(0, '', RESOURCE_TYPE.STRING, serverURI);
     // Bootstrap Server
-    this.objects['0/0'].addResource(1, 'RW', RESOURCE_TYPE.BOOLEAN, false);
+    this.objects['0/0'].addResource(1, '', RESOURCE_TYPE.BOOLEAN, false);
     // Security Mode (0-4). 3 if NoSec, 0 if PSK
-    this.objects['0/0'].addResource(2, 'RW', RESOURCE_TYPE.INTEGER, clientPSK === null ? 3 : 0);
+    this.objects['0/0'].addResource(2, '', RESOURCE_TYPE.INTEGER, clientPSK === null ? 3 : 0);
     // Public Key or Identity
-    this.objects['0/0'].addResource(3, 'RW', RESOURCE_TYPE.OPAQUE, publicKey);
+    this.objects['0/0'].addResource(3, '', RESOURCE_TYPE.OPAQUE, publicKey);
     // Server Public Key
-    this.objects['0/0'].addResource(4, 'RW', RESOURCE_TYPE.OPAQUE, serverRPK);
+    this.objects['0/0'].addResource(4, '', RESOURCE_TYPE.OPAQUE, serverRPK);
     // Secret Key
-    this.objects['0/0'].addResource(5, 'R', RESOURCE_TYPE.OPAQUE, secretKey);
+    this.objects['0/0'].addResource(5, '', RESOURCE_TYPE.OPAQUE, secretKey);
   }
 
   initiateServerObject(lifetime, queueMode) {
