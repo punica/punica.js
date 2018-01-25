@@ -42,7 +42,6 @@ class Endpoint extends EventEmitter {
       this.service.put('/subscriptions/' + this.id + path, (data, resp) => {
         if (resp.statusCode === 202) {
           let id = data['async-response-id'];
-          console.log('Observe id', data, id);
           this.observations[id] = callback;
           fulfill(id);
         } else {
@@ -56,7 +55,6 @@ class Endpoint extends EventEmitter {
 class Service extends EventEmitter {
   constructor(opts) {
     super();
-    console.log('Init service', opts);
     this.config = opts;
     this.client = new Client(); 
     this.endpoints = [];
@@ -70,7 +68,6 @@ class Service extends EventEmitter {
 
   get(path, callback) {
     let url = this.config['host'] + path;
-    console.log('Getting URL', url);
     this.client.get(url, callback);
   }
 
@@ -79,14 +76,12 @@ class Service extends EventEmitter {
       data: data
     };
     let url = this.config['host'] + path;
-    console.log('Putting URL', url);
     this.client.put(url, args, callback);
   }
 
   _processEvents(events) {
     for (let i = 0; i < events['registrations'].length; i++) {
       let id = events['registrations'][i]['name'];
-      console.log('Registration from', id);
       if (this.endpoints[id]) {
         this.endpoints[id].emit('register');
       }
@@ -94,7 +89,6 @@ class Service extends EventEmitter {
 
     for (let i = 0; i < events['reg-updates'].length; i++) {
       let id = events['reg-updates'][i]['name'];
-      console.log('Update from', id);
       if (this.endpoints[id]) {
         this.endpoints[id].emit('update');
       }
@@ -102,7 +96,6 @@ class Service extends EventEmitter {
 
     for (let i = 0; i < events['de-registrations'].length; i++) {
       let id = events['de-registrations'][i]['name'];
-      console.log('Deregistration from', id);
       if (this.endpoints[id]) {
         this.endpoints[id].emit('deregister');
       }
@@ -113,14 +106,12 @@ class Service extends EventEmitter {
     });
     for (let i = 0; i < responses.length; i++) {
       let res = responses[i];
-      console.log('Async-response:', res);
       this.emit('async-response', res);
     }
   }
 
   createNode(id) {
     if (!this.endpoints[id]) {
-      console.log('Creating endpoint', id);
       this.endpoints[id] = new Endpoint(this, id);
     }
 

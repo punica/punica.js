@@ -15,7 +15,7 @@ class Sensor4400 extends restapi.Device {
 
     /* Register device events */
     this.on('register', () => {
-      console.log('Sensor registered');
+      console.log('[Sensor4400-%s] Received registration event', this.id);
       this.configure();
     });
 
@@ -32,24 +32,24 @@ class Sensor4400 extends restapi.Device {
     // If it's already registered the register event (and therefore configuration) won't be called.
     // Explicitly check if sensor is registered, by trying to read device objects.
     this.getObjects().then((objects) => {
-      console.log('Sensor is already registered');
+      console.log('[Sensor4400-%s] Sensor is already registered', this.id);
       this.configure();
     }).catch(err => {
       if (err == 404) {
-        console.log('Sensor is not yet registered. Waiting for registration event...');
+        console.log('[Sensor4400-%s] Sensor is not yet registered. Waiting for registration event...', this.id);
       } else {
         throw err;
       }
     });
 
+    console.log('[Sensor4400-%s] Initialized sensor', this.id);
   }
 
   configure() {
-    console.log('Configuring sensor', this.id);
+    console.log('[Sensor4400-%s] Configuring sensor', this.id);
     this.ok = false;
 
     this.observe('/3200/0/5500', (err, value) => {
-      console.log('Sensor value:', value, err);
       if (err != 200) {
         console.error('Sensor error! Bad observe response:', err);
         this.emit('state', SENSOR_STATE_ERROR);
@@ -72,7 +72,7 @@ class Sensor4400 extends restapi.Device {
       this.lastState = state;
       this.lastCounter = counter;
     }).then(id => {
-      console.log('Observation id:', id);
+      console.log('[Sensor4400-%s] Received observation id %s', this.id, id);
     }).catch(err => {
       console.error('Service error! Failed to register observation!');
       console.error('Error:', err);
@@ -115,7 +115,7 @@ for (let i = 0; i < ids.length; i++) {
   sensors[i] = sensor;
 
   sensor.on('state', state => {
-    console.log('Sensor state:', state);
+    console.log('Sensor "%s" state: %s', sensor.id, state);
     sensor.state = state;
 
     if (systemArmed && state !== SENSOR_STATE_CLOSED) {
