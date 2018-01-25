@@ -132,10 +132,6 @@ class ClientNodeInstance {
     const objectInstance = addressArray.slice(0, 2).join('/');
     response._packet.ack = true;
 
-    if (observation !== undefined) {
-      response.setOption('Observe', observation);
-    }
-
     switch (addressArray.length) {
       case 1: {
         // TODO: Add handlers for objects reading
@@ -254,7 +250,6 @@ class ClientNodeInstance {
   }
 
   startObservation(addressArray, notification) {
-    const observationTime = new Date().getTime()
     const objectInstance = addressArray.slice(0, 2).join('/');
     let observeResources = [];
     notification._packet.ack = false;
@@ -277,10 +272,7 @@ class ClientNodeInstance {
         if (this.observedResources[addressArray.join('/')] === undefined) {
           const observation = this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
           this.objects[objectInstance].resources[addressArray[2]].getTLVBuffer((buffer) => {
-              let currentTime = (new Date().getTime()) - observationTime;
-              notification.setOption('Observe', currentTime);
               notification.write(buffer);
-              console.log(currentTime);
             });
           });
           this.observedResources[addressArray.join('/')] = {
