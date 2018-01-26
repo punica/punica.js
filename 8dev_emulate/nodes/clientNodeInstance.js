@@ -6,7 +6,38 @@ const { RESOURCE_TYPE } = require('./resourceInstance.js');
 
 const DATE = new Date();
 const LWM2M_VERSION = '1.0';
+
 coap.registerFormat('application/vnd.oma.lwm2m+tlv', 11542);
+
+function Interval(callback, delay) {
+  var iterator = setInterval(callback, delay);
+
+  this.stop = function() {
+    if (iterator) {
+      clearInterval(iterator);
+      iterator = null;
+    }
+    return this;
+  }
+
+  this.start = function() {
+    if (!iterator) {
+      this.stop();
+      iterator = setInterval(callback, delay);
+    }
+    return this;
+  }
+
+  this.reset = function(newDelay) {
+    delay = newDelay !== undefined ? newDelay : delay;
+    return this.stop().start();
+  }
+
+  this.skip = function(newDelay) {
+    callback();
+    return this.reset();
+  }
+}
 
 class ClientNodeInstance {
   constructor(lifetime, manufacturer, model, queueMode, endpointClientName, serverURI, clientPort) {
@@ -79,7 +110,7 @@ class ClientNodeInstance {
     this.objects['0/0'].addResource(5, '', RESOURCE_TYPE.OPAQUE, secretKey);
   }
 
-  initiateServerObject(lifetime, queueMode) {
+  initiateServerObject(lifetime, queueMode, minimumPeriod = 0, maximumPeriod = 60) {
     let bindingMode = 'U';
     bindingMode += queueMode ? 'Q' : '';
     this.createObject(1, 0);
@@ -88,9 +119,9 @@ class ClientNodeInstance {
     // Lifetime
     this.objects['1/0'].addResource(1, 'RW', RESOURCE_TYPE.INTEGER, lifetime);
     // Default Minimum Period
-    this.objects['1/0'].addResource(2, 'RW', RESOURCE_TYPE.INTEGER, 0);
+    this.objects['1/0'].addResource(2, 'RW', RESOURCE_TYPE.INTEGER, minimumPeriod);
     // Default Maximum Period
-    this.objects['1/0'].addResource(3, 'RW', RESOURCE_TYPE.INTEGER, 0);
+    this.objects['1/0'].addResource(3, 'RW', RESOURCE_TYPE.INTEGER, maximumPeriod);
     // Notification Storing When Disabled or Offline
     this.objects['1/0'].addResource(6, 'RW', RESOURCE_TYPE.BOOLEAN, true);
     // Binding
@@ -250,13 +281,8 @@ class ClientNodeInstance {
 
   startObservation(addressArray, notification) {
     const objectInstance = addressArray.slice(0, 2).join('/');
-    let observeResources = [];
     notification._packet.ack = false;
     notification._packet.confirmable = true;
-
-    notification.on('response', (response) => {
-      console.log('\n\nReceived response:\n\n', response);
-    });
 
     switch (addressArray.length) {
       case 1: {
@@ -269,14 +295,17 @@ class ClientNodeInstance {
       } 
       case 3: {
         if (this.observedResources[addressArray.join('/')] === undefined) {
-          const observation = this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
-          this.objects[objectInstance].resources[addressArray[2]].getTLVBuffer((buffer) => {
+          this.observedResources[addressArray.join('/')] = new Interval(() => {
+            this.objects[objectInstance].resources[addressArray[2]].getTLVBuffer((buffer) => {
               notification.write(buffer);
             });
+          }, this.objects['1/0'].getResourceValue('3') * 1000 );
+          this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
+            // TODO: Implement minimum period of observation
+            if (this.observedResources[addressArray.join('/')] instanceof Interval) {
+              this.observedResources[addressArray.join('/')].skip();
+            }
           });
-          this.observedResources[addressArray.join('/')] = {
-            'observationTime': observationTime,
-          };
         }
         break;
       }
@@ -285,41 +314,33 @@ class ClientNodeInstance {
         break;
       }
       default: {
-        // TODO: Handle bad observation requests
+        // TODO: Add handler for bad observation requests
       }
     }
   }
 
   stopObservation(addressArray) {
     const objectInstance = addressArray.slice(0, 2).join('/');
-    let unobserveResources = [];
     switch (addressArray.length) {
       case 1: {
-        // TODO: Add handlers for objects observation
+        // TODO: Add handlers for objects observation cancelling
         break;
       } 
       case 2: {
-        // TODO: Add handlers for object instances observation
+        // TODO: Add handlers for object instances observation cancelling
         break;
       } 
       case 3: {
-        // TODO: Add handlers for resources observation
-        unobserveResources.push(this.objects[objcestInstance].resources[addressArray[2]])
         delete this.observedResources[addressArray.join('/')];
         break;
       } 
       case 4: {
-        // TODO: Add handlers for resource instances observation
+        // TODO: Add handlers for resource instances observation cancelling
         break;
       }
       default: {
-        // TODO: Handle bad observation requests
+        // TODO: Handle bad observation cancelling requests
       }
-    }
-    for (let i = 0; i < unobserveResources.length; i += 1) {
-      resource.observe('value', (changes) => {
-        return resource.value;
-      });
     }
   }
 
