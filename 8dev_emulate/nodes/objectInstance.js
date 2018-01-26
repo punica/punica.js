@@ -23,6 +23,10 @@ class ObjectInstance {
     return this.resources[identifier].deleteResource(force);
   }
 
+  executeResource(identifier, force = false) {
+    return this.resources[identifier].executeResource(force);
+  }
+
   getResourceValue(identifier, callback) {
     callback(this.resources[identifier].value);
   }

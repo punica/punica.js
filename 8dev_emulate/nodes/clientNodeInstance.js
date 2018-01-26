@@ -96,10 +96,9 @@ class ClientNodeInstance {
     // Binding
     this.objects['1/0'].addResource(7, 'RW', RESOURCE_TYPE.STRING, bindingMode);
     // Registration Update Trigger
-    // this.objects['1/0'].addResource(8, 'E', RESOURCE_TYPE.NONE, null, () => {
-    //   this.update();
-    // });
-    //* update()*/);
+    this.objects['1/0'].addResource(8, 'E', RESOURCE_TYPE.NONE, () => {
+      return this.update();
+    });
   }
 
   initiateAccessControlObject() {

@@ -76,6 +76,14 @@ class ResourceInstance extends EventEmitter {
     return '4.05';
   }
 
+  executeResource(force) {
+    if (this.permissions.indexOf('E') > -1 || force) {
+      this.value();
+      return '2.04';
+    }
+    return '4.05';
+  }
+
   addObservationHandler(handler) {
     this.observationHandler = handler;
   }
