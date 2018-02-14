@@ -1,6 +1,7 @@
 'use strict';
 
 const coap = require('coap');
+const EventEmitter = require('events');
 const ObjectInstance = require('./objectInstance.js');
 const { RESOURCE_TYPE } = require('./resourceInstance.js');
 
@@ -39,11 +40,14 @@ function Interval(callback, delay) {
   }
 }
 
-class ClientNodeInstance {
+class ClientNodeInstance extends EventEmitter {
   constructor(lifetime, manufacturer, model, queueMode, endpointClientName, serverURI, clientPort) {
+    super();
+
+    this._state = 'stopped';
     this.objects = {};
+    this.updatesIterator = {};
     this.observedResources = {};
-    this.updatesPath = '';
     this.registrationPath = '/rd';
     this.listeningPort = clientPort;
     this.endpointClientName = endpointClientName;
@@ -56,11 +60,12 @@ class ClientNodeInstance {
     this.requestOptions = {
       host: serverURI,
       port: 5555,
-      pathname: this.registrationPath,
       method: 'POST',
       confirmable: 'true',
       agent: this.coapAgent,
     };
+
+    this.stateListener();
 
     this.initiateSecurityObject(serverURI);
     this.initiateServerObject(lifetime, queueMode);
@@ -70,6 +75,15 @@ class ClientNodeInstance {
     this.initiateFirmwareObject();
     this.initiateLocationObject();
     this.initiateConnectivityStatisticsObject();
+  }
+
+  get state() { return this._state; }
+
+  set state(state) {
+    if ((this._state !== state) && ((this._state !== 'stopped') || (state === 'started'))) {
+      this._state = state;
+      this.emit('state-change', state);
+    }
   }
 
   createObject(objectID, instanceID, hidden) {
@@ -127,9 +141,8 @@ class ClientNodeInstance {
     // Binding
     this.objects['1/0'].addResource(7, 'RW', RESOURCE_TYPE.STRING, bindingMode);
     // Registration Update Trigger
-    this.objects['1/0'].addResource(8, 'E', RESOURCE_TYPE.NONE, () => {
-      return this.update();
-    });
+    // this.objects['1/0'].addResource(8, 'E', RESOURCE_TYPE.NONE, () => {
+    // });
   }
 
   initiateAccessControlObject() {
@@ -224,58 +237,64 @@ class ClientNodeInstance {
     ].join('&');
   }
 
-  update(callback, updateLifetime = false, updateBinding = false) {
-    const updateOptions = Object.assign({}, this.requestOptions);
-    let queryString = '';
-    updateOptions.pathname = this.updatesPath;
+  update(updatesPath, updateLifetime = false, updateBinding = false) {
+    return new Promise((updated, failed) => {
+      const updateOptions = Object.assign({}, this.requestOptions);
+      const queryOptions = [];
+      updateOptions.pathname = updatesPath;
 
-    if (updateLifetime) {
-      queryString += `lt=${this.objects['1/0'].resources['1'].value}`;
-    }
-
-    if (updateBinding) {
-      queryString += `b=${this.objects['1/0'].resources['7'].value}`;
-    }
-
-    if (queryString !== '') {
-      updateOptions.query = queryString;
-    }
-
-    const request = coap.request(updateOptions);
-    request.on('response', (response) => {
-      switch (response.code) {
-        case '2.04': {
-          if (typeof callback === 'function') {
-            callback();
-          };
-          break;
-        }
-        case '4.04': {
-          // TODO: Decide if to add registering in case of unregistered device.
-          this.stopUpdates();
-          break;
-        }
-        default: {
-          this.stopUpdates();
-        }
+      if (updateLifetime) {
+        queryOptions.push(`lt=${this.objects['1/0'].resources['1'].value}`);
       }
+
+      if (updateBinding) {
+        queryOptions.push(`b=${this.objects['1/0'].resources['7'].value}`);
+      }
+
+      if (queryOptions.length > 0) {
+        updateOptions.query = queryOptions.join('&');
+      }
+
+      const request = coap.request(updateOptions);
+
+      request.on('response', (response) => {
+        if (response.code === '2.04') {
+          updated();
+        } else {
+          failed(response.code);
+        }
+      });
+
+      request.on('error', (error) => {
+        // TODO: Parse errors and act accordingly
+        // failed(error);
+        failed('timeout');
+      });
+      request.on('timeout', (error) => {
+        // failed(error);
+        failed('timeout');
+      });
+
+      request.end();
     });
-    request.end();
   }
 
-  startUpdates() {
-    const that = this;
-    this.coapServer.listen(that.listeningPort, () => {
-      that.updatesIterator = setInterval(() => {
-        that.update(() => {});
+  startUpdates(updatesPath) {
+
+    this.coapServer.listen(this.listeningPort, () => {
+      this.updatesIterator = setInterval(() => {
+        this.update(updatesPath)
+        .then()
+        .catch((error) => {
+          this.emit('update-failed', error, updatesPath);
+        });
       }, 10000);
     });
   }
 
-  stopUpdates() {
+  stopUpdates(updatesPath) {
     if (this.updatesIterator) {
       clearInterval(this.updatesIterator);
-      this.updatesIterator = null;
     }
   }
 
@@ -283,6 +302,13 @@ class ClientNodeInstance {
     const objectInstance = addressArray.slice(0, 2).join('/');
     notification._packet.ack = false;
     notification._packet.confirmable = true;
+
+    notification.on('error', (error) => {
+      // TODO: Find better way to handle notification timeouts
+      if (this.observedResources[addressArray.join('/')] !== undefined) {
+        this.stopObservation(addressArray);
+      }
+    })
 
     switch (addressArray.length) {
       case 1: {
@@ -344,63 +370,136 @@ class ClientNodeInstance {
     }
   }
 
-  register(callback) {
-    const messageBody = this.getObjectInstancesList().join(',');
-    const registrationOptions = Object.assign({}, this.requestOptions);
-    registrationOptions.query = this.getQueryString();
-    const request = coap.request(registrationOptions);
+  register(registrationPath) {
+    return new Promise((registered, failed) => {
+      const messageBody = this.getObjectInstancesList().join(',');
+      const registrationOptions = Object.assign({}, this.requestOptions);
+      registrationOptions.pathname = registrationPath;
+      registrationOptions.query = this.getQueryString();
+      const request = coap.request(registrationOptions);
+      let updatesPath = '';
 
-    this.stopUpdates();
-
-    request.on('response', (response) => {
-      switch (response.code) {
-        case '2.01': {
+      request.on('response', (response) => {
+        if (response.code === '2.01') {
           for (let i = 0; i < response.options.length; i += 1) {
             if (response.options[i].name === 'Location-Path') {
-              this.updatesPath += `/${response.options[i].value}`;
+              updatesPath += `/${response.options[i].value}`;
             }
           }
-          this.startUpdates();
-          callback(response);
-          break;
+          this.state = 'registered';
+          registered(updatesPath);
+        } else {
+          failed(response.code);
         }
-        default: {
-          // TODO: Decide what to do if registration fails.
-        }
-      }
+      });
+
+      request.on('error', failed);
+      request.on('timeout', failed);
+
+      request.end(messageBody);
     });
-    request.end(messageBody);
   }
 
-  deregister(callback) {
-    if (this.updatesPath !== '') {
+  deregister(registrationPath) {
+    this.emit('deregister', registrationPath);
+  }
+
+  deregistrationHandler(updatesPath) {
+    return new Promise((deregistered, failed) => {
       const deregistrationOptions = Object.assign({}, this.requestOptions);
       deregistrationOptions.method = 'DELETE';
-      deregistrationOptions.pathname = this.updatesPath;
+      deregistrationOptions.pathname = updatesPath;
 
-      this.stopUpdates();
+      this.stopUpdates(updatesPath);
 
       const request = coap.request(deregistrationOptions);
 
       request.on('response', (response) => {
-        switch (response.code) {
-          case '2.02': {
-            this.updatesPath = '';
-            break;
-          }
-          default: {
-            // TODO: Decide what to do if deregistration fails.
-          }
-        }
-        if (callback && typeof callback === 'function') {
-          callback();
+        if ((response.code === '2.02') || (response.code === '4.04')) {
+          deregistered();
+          this.state = 'not-registered';
+        } else {
+          failed(response.code);
         }
       });
+
+      request.on('error', failed);
+      request.on('timeout', failed);
+
       request.end();
-    }
-    if (callback && typeof callback === 'function') {
-      callback();
-    }
+    });
+  }
+
+  stateListener() {
+    this.on('state-change', (state) => {
+      switch (state) {
+        case 'not-registered': {
+          this.startRegistration()
+          break;
+        }
+        case 'stopped': {
+          this.emit('deregister');
+          break;
+        }
+        case 'started': {
+          this.startRegistration();
+          break;
+        }
+        case 'registered': {
+          break;
+        }
+        default: {
+          this.emit('deregister');
+        }
+      }
+    });
+  }
+
+  startRegistration(registrationPath = '/rd') {
+    return new Promise((started, failed) => {
+      this.register(registrationPath)
+      .then((updatesPath) => {
+        this.on('deregister', () => {
+          this.deregistrationHandler(updatesPath);
+        });
+
+        this.on('update-failed', (reason) => {
+          if ((reason === '4.04') || (reason === 'timeout')) {
+            this.stopUpdates(updatesPath);
+            this.state = 'not-registered';
+          }
+        });
+
+        this.startUpdates(updatesPath);
+        started(updatesPath);
+      })
+      .catch((responseCode) => {
+        switch (responseCode) {
+          case '4.00':
+          case '4.03':
+          case '4.12':
+            this.state = 'stopped';
+            failed(responseCode);
+            break;
+          default:
+            setTimeout(() => {
+              this.startRegistration(registrationPath)
+              .then(started)
+              .catch((error) => {
+                this.emit('error', error);
+              });
+            }, this.objects['1/0'].resources['1'].value);
+        }
+      });
+    });
+  }
+
+  start() {
+    this.state = 'started';
+  }
+
+  stop() {
+    this.state = 'stopped';
   }
 
   requestListener(request, response) {
