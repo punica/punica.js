@@ -212,8 +212,38 @@ class ClientNodeInstance extends EventEmitter {
     }
   }
 
-  requestPut(response, addressArray) {
-    // TODO: Add handlers for resource writing
+  requestPut(response, addressArray, payload) {
+    const objectInstance = addressArray.slice(0, 2).join('/');
+    response._packet.ack = true;
+
+    switch (addressArray.length) {
+      case 1: {
+        // TODO: Add handlers for objects reading
+        response.statusCode = '4.06';
+        break;
+      }
+      case 2: {
+        // TODO: Add handlers for object instances reading
+        response.statusCode = '4.06';
+        break;
+      }
+      case 3: {
+        if (this.objects[objectInstance] instanceof ObjectInstance) {
+          response.statusCode = this.objects[objectInstance].writeFromTLV(payload);
+        } else {
+          response.statusCode = '4.04';
+        }
+        break;
+      }
+      case 4: {
+        // TODO: Add handlers for resource instances reading
+        response.statusCode = '4.00';
+        break;
+      }
+      default: {
+        response.statusCode = '4.00';
+      }
+    }
     response.end()
   }
 
@@ -517,7 +547,7 @@ class ClientNodeInstance extends EventEmitter {
         break;
       }
       case 'PUT': {
-        this.requestPut(response, addressArray);
+        this.requestPut(response, addressArray, request.payload);
         break;
       }
       case 'POST': {

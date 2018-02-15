@@ -1,6 +1,7 @@
 'use strict';
 
-const { ResourceInstance } = require('./resourceInstance.js');
+const lwm2m = require('./lwm2m.js');
+const { RESOURCE_TYPE, ResourceInstance } = require('./resourceInstance.js');
 
 class ObjectInstance {
   constructor(objectID, instanceID, hidden = false) {
@@ -53,6 +54,58 @@ class ObjectInstance {
       allBuffers.push(this.resources[iterator].getTLV());
     }
     return Buffer.concat(allBuffers);
+  }
+
+  writeFromTLV(payload) {
+    const resourcesList = lwm2m.parseTLV(payload);
+    let value;
+
+    if (resourcesList[0].getType() === lwm2m.TYPE_RESOURCE) {
+      if (this.resources[`${resourcesList[0].getIdentifier()}`] === undefined) {
+        return '4.04';
+      }
+
+      switch (this.resources[`${resourcesList[0].getIdentifier()}`].type) {
+        case RESOURCE_TYPE.NONE: {
+          if (resourcesList[0].valueLength !== 0) {
+            return '4.00';
+          }
+          value = undefined;
+          break;
+        }
+
+        case RESOURCE_TYPE.BOOLEAN: {
+          value = resourcesList[0].getBooleanValue();
+          break;
+        }
+
+        case RESOURCE_TYPE.INTEGER: {
+          value = resourcesList[0].getIntegerValue();
+          break;
+        }
+
+        case RESOURCE_TYPE.FLOAT: {
+          value = resourcesList[0].getFloatValue();
+          break;
+        }
+
+        case RESOURCE_TYPE.STRING: {
+          value = resourcesList[0].getStringValue();
+          break;
+        }
+
+        case RESOURCE_TYPE.OPAQUE: {
+          value = resourcesList[0].binaryValue;
+          break;
+        }
+
+        default: {
+          return '5.00';
+        }
+      }
+      console.log('Writing value:', value,'to resource:', resourcesList[0].getIdentifier());
+      return this.writeResource(`${resourcesList[0].getIdentifier()}`, value)
+    }
   }
 }
 

@@ -49,7 +49,7 @@ class ResourceInstance extends EventEmitter {
 
     if (this._value != value) {
       this._value = value;
-      this.emit('change');
+      this.emit('change', value);
     }
   }
 
