@@ -1,21 +1,21 @@
 {
-  "name": "restapi-demo",
+  "name": "restserver-api",
   "version": "0.0.1",
-  "description": "8devices sensor network REST API demo",
+  "description": "8devices sensor network REST server API and demo",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/8devices/restserver-demo.git"
+    "url": "git+https://github.com/8devices/restserver-api.git"
   },
   "author": "Giedrius Medzevicius <giedrius@8devices.com>",
   "license": "UNLICENSED",
   "bugs": {
-    "url": "https://github.com/8devices/restserver-demo/issues"
+    "url": "https://github.com/8devices/restserver-api/issues"
   },
-  "homepage": "https://github.com/8devices/restserver-demo#readme",
+  "homepage": "https://github.com/8devices/restserver-api#readme",
   "dependencies": {
     "node-rest-client": "^3.1.0"
   }
