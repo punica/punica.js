@@ -45,11 +45,11 @@ class Sensor3700 extends ClientNode {
     this.createObject(3312, 0);
 
     this.objects['3/0'].addResource(7, 'R', RESOURCE_TYPE.INTEGER, 3300, powerSourceVoltageHandler);
-    this.objects['3305/0'].addResource(5800, 'R', RESOURCE_TYPE.FLOAT, 20.0, () => {
+    this.objects['3305/0'].addResource(5800, 'R', RESOURCE_TYPE.FLOAT, 0.0, () => {
       return this.instantaneousActivePowerHandler();
     });
     this.objects['3305/0'].addResource(5805, 'R', RESOURCE_TYPE.FLOAT, 0.0);
-    this.objects['3305/0'].addResource(5810, 'R', RESOURCE_TYPE.FLOAT, 20.0, () => {
+    this.objects['3305/0'].addResource(5810, 'R', RESOURCE_TYPE.FLOAT, 0.0, () => {
       return this.instantaneousReactivePowerHandler();
     });
     this.objects['3305/0'].addResource(5815, 'R', RESOURCE_TYPE.FLOAT, 0.0);
@@ -64,7 +64,7 @@ class Sensor3700 extends ClientNode {
     this.objects['3305/0'].resources['5810'].on('change', (currentReactivePower) => {
       const cumulativeReactivePower = this.objects['3305/0'].resources['5815'].value;
         this.objects['3305/0'].writeResource(
-            5805, (currentReactivePower/36000 + cumulativeReactivePower) % (2 ** 31), true);
+            5815, (currentReactivePower/36000 + cumulativeReactivePower) % (2 ** 31), true);
     });
   }
 

@@ -103,7 +103,6 @@ class ObjectInstance {
           return '5.00';
         }
       }
-      console.log('Writing value:', value,'to resource:', resourcesList[0].getIdentifier());
       return this.writeResource(`${resourcesList[0].getIdentifier()}`, value)
     }
   }
