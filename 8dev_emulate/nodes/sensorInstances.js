@@ -53,7 +53,7 @@ class Sensor3700 extends ClientNode {
       return this.instantaneousReactivePowerHandler();
     });
     this.objects['3305/0'].addResource(5815, 'R', RESOURCE_TYPE.FLOAT, 0.0);
-    this.objects['3312/0'].addResource(5850, 'RW', RESOURCE_TYPE.BOOLEAN, false);
+    this.objects['3312/0'].addResource(5850, 'RW', RESOURCE_TYPE.BOOLEAN, false, undefined, true);
 
     this.objects['3305/0'].resources['5800'].on('change', (currentActivePower) => {
       const cumulativeActivePower = this.objects['3305/0'].resources['5805'].value;
@@ -106,8 +106,8 @@ class Sensor4400 extends ClientNode {
     this.createObject(3303, 0);
 
     this.objects['3/0'].addResource(7, 'R', RESOURCE_TYPE.INTEGER, 3300, powerSourceVoltageHandler);
-    this.objects['3200/0'].addResource(5500, 'R', RESOURCE_TYPE.BOOLEAN, false);
-    this.objects['3200/0'].addResource(5501, 'R', RESOURCE_TYPE.INTEGER, 0);
+    this.objects['3200/0'].addResource(5500, 'R', RESOURCE_TYPE.BOOLEAN, false, undefined, true);
+    this.objects['3200/0'].addResource(5501, 'R', RESOURCE_TYPE.INTEGER, 0, undefined, true);
     this.objects['3303/0'].addResource(5700, 'R', RESOURCE_TYPE.FLOAT, 20.0, temperatureSensorHandler);
 
     this.objects['3200/0'].resources['5500'].on('change', () => {

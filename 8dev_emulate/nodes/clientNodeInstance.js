@@ -356,12 +356,14 @@ class ClientNodeInstance extends EventEmitter {
               notification.write(buffer);
             });
           }, this.objects['1/0'].getResourceValue('3') * 1000 );
-          this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
-            // TODO: Implement minimum period of observation
-            if (this.observedResources[addressArray.join('/')] instanceof Interval) {
-              this.observedResources[addressArray.join('/')].skip();
-            }
-          });
+          if (this.objects[objectInstance].resources[addressArray[2]].notifyOnCHange) {
+            this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
+              // TODO: Implement minimum period of observation
+              if (this.observedResources[addressArray.join('/')] instanceof Interval) {
+                this.observedResources[addressArray.join('/')].skip();
+              }
+            });
+          }
         }
         break;
       }

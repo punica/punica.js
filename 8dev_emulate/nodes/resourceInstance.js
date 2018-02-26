@@ -29,7 +29,7 @@ class Resource extends EventEmitter {
 }
 
 class ResourceInstance extends EventEmitter {
-  constructor(identifier, permissions, type, value = undefined, handler = undefined) {
+  constructor(identifier, permissions, type, value = undefined, handler = undefined, notifyOnChange = false) {
     super();
 
     this.identifier = identifier;
@@ -37,6 +37,7 @@ class ResourceInstance extends EventEmitter {
     this._value = value;
     this.handler = handler;
     this.permissions = permissions;
+    this.notifyOnChange = notifyOnChange;
     this.valueSetIterator = handler === undefined ? undefined : setInterval(() => {
       this.value = handler();
     }, 100);

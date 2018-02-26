@@ -11,9 +11,9 @@ class ObjectInstance {
     this.resources = {};
   }
 
-  addResource(identifier, permissions, type, value, handler) {
+  addResource(identifier, permissions, type, value, handler, notifyOnChange) {
     // TODO: Add implementation for multiple instance resources.
-    this.resources[`${identifier}`] = new ResourceInstance(identifier, permissions, type, value, handler);
+    this.resources[`${identifier}`] = new ResourceInstance(identifier, permissions, type, value, handler, notifyOnChange);
   }
 
   writeResource(identifier, value, force = false) {
