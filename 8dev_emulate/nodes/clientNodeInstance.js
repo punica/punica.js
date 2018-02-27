@@ -35,8 +35,7 @@ function Interval(callback, delay) {
   }
 
   this.skip = function(newDelay) {
-    callback();
-    return this.reset();
+    return this.reset(newDelay);
   }
 }
 
@@ -356,6 +355,11 @@ class ClientNodeInstance extends EventEmitter {
               notification.write(buffer);
             });
           }, this.objects['1/0'].getResourceValue('3') * 1000 );
+
+          this.objects['1/0'].resources['3'].on('change', (newPeriod) => {
+            this.observedResources[addressArray.join('/')].reset(newPeriod * 1000);
+          });
+
           if (this.objects[objectInstance].resources[addressArray[2]].notifyOnCHange) {
             this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
               // TODO: Implement minimum period of observation
