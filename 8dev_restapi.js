@@ -37,6 +37,42 @@ class Endpoint extends EventEmitter {
     });
   }
 
+  read(path, callback) {
+    return new Promise((fulfill, reject) => {
+      this.service.get('/endpoints/' + this.id + path, (data, resp) => {
+        if (resp.statusCode === 202) {
+          this.service.on('async-response', (asyncResponse) => {
+            if (data['async-response-id'] === asyncResponse['id']) {
+              callback(asyncResponse.status, asyncResponse.payload);
+            }
+          });
+          let id = data['async-response-id'];
+          fulfill(id);
+        } else {
+          reject(resp.statusCode);
+        }
+      });
+    });
+  }
+
+  write(path, callback, tlvBuffer) {
+    return new Promise((fulfill, reject) => {
+      this.service.put('/endpoints/' + this.id + path, (data, resp) => {
+        if (resp.statusCode === 202) {
+          this.service.on('async-response', (asyncResponse) => {
+            if (data['async-response-id'] === asyncResponse['id']) {
+              callback(asyncResponse.status, asyncResponse.payload);
+            }
+          });
+          let id = data['async-response-id'];
+          fulfill(id);
+        } else {
+          reject(resp.statusCode);
+        }
+      }, tlvBuffer);
+    });
+  }
+
   observe(path, callback) {
     return new Promise((fulfill, reject) => {
       this.service.put('/subscriptions/' + this.id + path, (data, resp) => {
@@ -58,6 +94,7 @@ class Service extends EventEmitter {
     this.config = opts;
     this.client = new Client(); 
     this.endpoints = [];
+    this.addTlvSerializer();
 
     this.pollTimer = setInterval(() => {
       this.client.get(this.config['host'] + '/notification/pull', (data, resp) => {
@@ -66,14 +103,34 @@ class Service extends EventEmitter {
     }, 1234);
   }
 
-  get(path, callback) {
-    let url = this.config['host'] + path;
-    this.client.get(url, callback);
+  addTlvSerializer() {
+    this.client.serializers.add({
+      name: 'buffer-serializer',
+      isDefault: false,
+      match: (request) => {
+        return request.headers['Content-Type'] === 'application/vnd.oma.lwm2m+tlv';
+      },
+      serialize: (data, nrcEventEmitter, serializedCallback) => {
+        if (data instanceof Buffer) {
+          nrcEventEmitter('serialized', data);
+          serializedCallback(data);
+        }
+      },
+    });
   }
 
-  put(path, callback, data) {
+  get(path, callback) {
     let args = {
-      data: data
+      headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
+    };
+    let url = this.config['host'] + path;
+    this.client.get(url, args, callback);
+  }
+
+  put(path, callback, tlvBuffer) {
+    let args = {
+      headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
+      data: tlvBuffer
     };
     let url = this.config['host'] + path;
     this.client.put(url, args, callback);
