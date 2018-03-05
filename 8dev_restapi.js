@@ -40,6 +40,42 @@ class Endpoint extends EventEmitter {
   read(path, callback) {
     return new Promise((fulfill, reject) => {
       this.service.get('/endpoints/' + this.id + path, (data, resp) => {
+        const id = data['async-response-id'];
+        if (resp.statusCode === 202) {
+          this.service.on('async-response', (asyncResponse) => {
+            if (id === asyncResponse['id']) {
+              callback(asyncResponse.status, asyncResponse.payload);
+            }
+          });
+          fulfill(id);
+        } else {
+          reject(resp.statusCode);
+        }
+      });
+    });
+  }
+
+  write(path, callback, tlvBuffer) {
+    return new Promise((fulfill, reject) => {
+      this.service.put('/endpoints/' + this.id + path, (data, resp) => {
+        const id = data['async-response-id'];
+        if (resp.statusCode === 202) {
+          this.service.on('async-response', (asyncResponse) => {
+            if (id === asyncResponse['id']) {
+              callback(asyncResponse.status, asyncResponse.payload);
+            }
+          });
+          fulfill(id);
+        } else {
+          reject(resp.statusCode);
+        }
+      }, tlvBuffer);
+    });
+  }
+
+  execute(path, callback) {
+    return new Promise((fulfill, reject) => {
+      this.service.post('/endpoints/' + this.id + path, (data, resp) => {
         if (resp.statusCode === 202) {
           this.service.on('async-response', (asyncResponse) => {
             if (data['async-response-id'] === asyncResponse['id']) {
@@ -52,24 +88,6 @@ class Endpoint extends EventEmitter {
           reject(resp.statusCode);
         }
       });
-    });
-  }
-
-  write(path, callback, tlvBuffer) {
-    return new Promise((fulfill, reject) => {
-      this.service.put('/endpoints/' + this.id + path, (data, resp) => {
-        if (resp.statusCode === 202) {
-          this.service.on('async-response', (asyncResponse) => {
-            if (data['async-response-id'] === asyncResponse['id']) {
-              callback(asyncResponse.status, asyncResponse.payload);
-            }
-          });
-          let id = data['async-response-id'];
-          fulfill(id);
-        } else {
-          reject(resp.statusCode);
-        }
-      }, tlvBuffer);
     });
   }
 
@@ -134,6 +152,14 @@ class Service extends EventEmitter {
     };
     let url = this.config['host'] + path;
     this.client.put(url, args, callback);
+  }
+
+  post(path, callback) {
+    let args = {
+      headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
+    };
+    let url = this.config['host'] + path;
+    this.client.post(url, args, callback);
   }
 
   _processEvents(events) {
