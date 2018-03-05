@@ -377,13 +377,14 @@ class ClientNodeInstance extends EventEmitter {
         break;
       } 
       case 3: {
-        if (this.observedResources[addressArray.join('/')] === undefined) {
+        if (this.observedResources[addressArray.join('/')] === undefined &&
+          this.objects[objectInstance] instanceof ObjectInstance) {
           this.observedResources[addressArray.join('/')] = new Interval(() => {
             this.objects[objectInstance].resources[addressArray[2]].getTLVBuffer((buffer) => {
               notification.write(buffer);
             });
           }, this.objects['1/0'].getResourceValue('3') * 1000 );
-          if (this.objects[objectInstance].resources[addressArray[2]].notifyOnCHange) {
+          if (this.objects[objectInstance].resources[addressArray[2]].notifyOnChange) {
             this.objects[objectInstance].resources[addressArray[2]].on('change', () => {
               // TODO: Implement minimum period of observation
               if (this.observedResources[addressArray.join('/')] instanceof Interval) {
