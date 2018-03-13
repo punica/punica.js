@@ -417,6 +417,7 @@ class ClientNodeInstance extends EventEmitter {
         break;
       } 
       case 3: {
+        this.observedResources[addressArray.join('/')].stop();
         delete this.observedResources[addressArray.join('/')];
         break;
       } 
@@ -427,6 +428,12 @@ class ClientNodeInstance extends EventEmitter {
       default: {
         // TODO: Handle bad observation cancelling requests
       }
+    }
+  }
+
+  stopObservations() {
+    for (var obs in this.observedResources) {
+      this.stopObservation(obs.split('/'));
     }
   }
 
@@ -471,6 +478,7 @@ class ClientNodeInstance extends EventEmitter {
       deregistrationOptions.pathname = updatesPath;
 
       this.stopUpdates(updatesPath);
+      this.stopObservations();
 
       const request = coap.request(deregistrationOptions);
 
