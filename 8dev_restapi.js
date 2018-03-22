@@ -10,12 +10,18 @@ class Endpoint extends EventEmitter {
 
     this.service = service;
     this.id = id;
-    this.observations = [];
+    this.transactions = {};
+    this.observations = {};
 
     this.service.on('async-response', resp => {
       let id = resp['id'];
       let code = resp['status'];
       let data = resp['payload'];
+
+      if (this.transactions[id] !== undefined) {
+        this.transactions[id](code, data);
+        delete this.transactions[id];
+      }
 
       if (this.observations[id] !== undefined) {
         this.observations[id](code, data);
@@ -39,16 +45,16 @@ class Endpoint extends EventEmitter {
     });
   }
 
+  addAsyncCallback(id, callback) {
+    this.transactions[id] = callback;
+  }
+
   read(path, callback) {
     return new Promise((fulfill, reject) => {
       this.service.get('/endpoints/' + this.id + path).then((dataAndResponse) => {
-        const id = dataAndResponse.data['async-response-id'];
         if (dataAndResponse.resp.statusCode === 202) {
-          this.service.on('async-response', (asyncResponse) => {
-            if (id === asyncResponse['id']) {
-              callback(asyncResponse.status, asyncResponse.payload);
-            }
-          });
+          const id = dataAndResponse.data['async-response-id'];
+          this.addAsyncCallback(id, callback);
           fulfill(id);
         } else {
           reject(dataAndResponse.resp.statusCode);
@@ -62,13 +68,9 @@ class Endpoint extends EventEmitter {
   write(path, callback, tlvBuffer) {
     return new Promise((fulfill, reject) => {
       this.service.put('/endpoints/' + this.id + path, tlvBuffer).then((dataAndResponse) => {
-        const id = dataAndResponse.data['async-response-id'];
         if (dataAndResponse.resp.statusCode === 202) {
-          this.service.on('async-response', (asyncResponse) => {
-            if (id === asyncResponse['id']) {
-              callback(asyncResponse.status, asyncResponse.payload);
-            }
-          });
+          const id = dataAndResponse.data['async-response-id'];
+          this.addAsyncCallback(id, callback);
           fulfill(id);
         } else {
           reject(dataAndResponse.resp.statusCode);
@@ -82,13 +84,9 @@ class Endpoint extends EventEmitter {
   execute(path, callback) {
     return new Promise((fulfill, reject) => {
       this.service.post('/endpoints/' + this.id + path).then((dataAndResponse) => {
-        const id = dataAndResponse.data['async-response-id'];
         if (dataAndResponse.resp.statusCode === 202) {
-          this.service.on('async-response', (asyncResponse) => {
-            if (id === asyncResponse['id']) {
-              callback(asyncResponse.status, asyncResponse.payload);
-            }
-          });
+          const id = dataAndResponse.data['async-response-id'];
+          this.addAsyncCallback(id, callback);
           fulfill(id);
         } else {
           reject(dataAndResponse.resp.statusCode);
