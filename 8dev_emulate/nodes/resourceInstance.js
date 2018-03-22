@@ -98,11 +98,11 @@ class ResourceInstance extends EventEmitter {
       case RESOURCE_TYPE.NONE:
         return 0;
       case RESOURCE_TYPE.INTEGER:
-        if (this.value === 0) {
-          return 0;
-        } else if (this.value < (2 ** 7)) {
+        if (this.value < 0) {
+          return 4;
+        } else if (this.value < (2 ** 8)) {
           return 1;
-        } else if (this.value < (2 ** 15)) {
+        } else if (this.value < (2 ** 16)) {
           return 2;
         } else if (this.value < (2 ** 31)) {
           return 4;
@@ -165,17 +165,19 @@ class ResourceInstance extends EventEmitter {
         break;
       }
       case RESOURCE_TYPE.INTEGER: {
-        if (2 ** 7 <= value && value < 2 ** 8) {
-          valueBuffer = hexBuffer(`00${value.toString(16)}`);
-          break;
-        } else if (2 ** 15 <= value && value < 2 ** 16) {
-          valueBuffer = hexBuffer(`0000${value.toString(16)}`);
-          break;
-        } else if (2 ** 31 <= value && value < 2 ** 32) {
-          valueBuffer = hexBuffer(`00000000${value.toString(16)}`);
-          break;
+        if (value < 0) {
+          valueBuffer = new Buffer(4);
+          valueBuffer.writeInt32BE(value);
+        } else if (value < 2 ** 8) {
+          valueBuffer = new Buffer(1);
+          valueBuffer.writeUInt8(value);
+        } else if (value < 2 ** 16) {
+          valueBuffer = new Buffer(2);
+          valueBuffer.writeUInt16BE(value);
+        } else {
+          valueBuffer = new Buffer(4);
+          valueBuffer.writeUInt32BE(value);
         }
-        valueBuffer = hexBuffer(value.toString(16));
         break;
       }
       case RESOURCE_TYPE.FLOAT: {
