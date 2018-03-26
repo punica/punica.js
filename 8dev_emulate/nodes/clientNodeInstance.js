@@ -143,7 +143,7 @@ class ClientNodeInstance extends EventEmitter {
     this.objects['1/0'].addResource(7, 'RW', RESOURCE_TYPE.STRING, bindingMode);
     // Registration Update Trigger
     this.objects['1/0'].addResource(8, 'E', RESOURCE_TYPE.NONE, () => {
-      updateHandler();
+      this.updateHandler();
     });
   }
 
@@ -342,7 +342,6 @@ class ClientNodeInstance extends EventEmitter {
     this.coapServer.listen(this.listeningPort, () => {
       this.updatesIterator[updatesPath] = new Interval(() => {
         this.update(updatesPath)
-        .then()
         .catch((error) => {
           this.emit('update-failed', error, updatesPath);
         });
@@ -361,10 +360,16 @@ class ClientNodeInstance extends EventEmitter {
   updateHandler(updatesPath) {
     if (updatesPath === undefined) {
       for (let path in this.updatesIterator) {
-        this.update(updatesPath);
+        this.update(path)
+        .catch((error) => {
+          this.emit('update-failed', error, path);
+        });
       }
     } else {
-      this.update(updatesPath);
+      this.update(updatesPath)
+      .catch((error) => {
+        this.emit('update-failed', error, updatesPath);
+      });
     }
   }
 
