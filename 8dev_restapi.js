@@ -1,8 +1,7 @@
-'use strict';
+
 
 const EventEmitter = require('events');
-const Client = require('node-rest-client').Client;
-
+const rest = require('node-rest-client');
 
 class Endpoint extends EventEmitter {
   constructor(service, id) {
@@ -13,18 +12,18 @@ class Endpoint extends EventEmitter {
     this.transactions = {};
     this.observations = {};
 
-    this.service.on('async-response', resp => {
-      let id = resp['id'];
-      let code = resp['status'];
-      let data = resp['payload'];
+    this.service.on('async-response', (resp) => {
+      const ID = resp.id;
+      const code = resp.status;
+      const data = resp.payload;
 
-      if (this.transactions[id] !== undefined) {
-        this.transactions[id](code, data);
-        delete this.transactions[id];
+      if (this.transactions[ID] !== undefined) {
+        this.transactions[ID](code, data);
+        delete this.transactions[ID];
       }
 
-      if (this.observations[id] !== undefined) {
-        this.observations[id](code, data);
+      if (this.observations[ID] !== undefined) {
+        this.observations[ID](code, data);
       }
     });
 
@@ -33,8 +32,8 @@ class Endpoint extends EventEmitter {
 
   getObjects() {
     return new Promise((fulfill, reject) => {
-      this.service.get('/endpoints/' + this.id).then((dataAndResponse) => {
-        if (dataAndResponse.resp.statusCode == 200) {
+      this.service.get(`/endpoints/${this.id}`).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
           fulfill(dataAndResponse.data);
         } else {
           reject(dataAndResponse.resp.statusCode);
@@ -51,7 +50,7 @@ class Endpoint extends EventEmitter {
 
   read(path, callback) {
     return new Promise((fulfill, reject) => {
-      this.service.get('/endpoints/' + this.id + path).then((dataAndResponse) => {
+      this.service.get(`/endpoints/${this.id}${path}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
           const id = dataAndResponse.data['async-response-id'];
           this.addAsyncCallback(id, callback);
@@ -60,14 +59,14 @@ class Endpoint extends EventEmitter {
           reject(dataAndResponse.resp.statusCode);
         }
       }).catch((err) => {
-          reject(err);
+        reject(err);
       });
     });
   }
 
   write(path, callback, tlvBuffer) {
     return new Promise((fulfill, reject) => {
-      this.service.put('/endpoints/' + this.id + path, tlvBuffer).then((dataAndResponse) => {
+      this.service.put(`/endpoints/${this.id}${path}`, tlvBuffer).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
           const id = dataAndResponse.data['async-response-id'];
           this.addAsyncCallback(id, callback);
@@ -76,14 +75,14 @@ class Endpoint extends EventEmitter {
           reject(dataAndResponse.resp.statusCode);
         }
       }).catch((err) => {
-          reject(err);
+        reject(err);
       });
     });
   }
 
   execute(path, callback) {
     return new Promise((fulfill, reject) => {
-      this.service.post('/endpoints/' + this.id + path).then((dataAndResponse) => {
+      this.service.post(`/endpoints/${this.id}${path}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
           const id = dataAndResponse.data['async-response-id'];
           this.addAsyncCallback(id, callback);
@@ -92,16 +91,16 @@ class Endpoint extends EventEmitter {
           reject(dataAndResponse.resp.statusCode);
         }
       }).catch((err) => {
-          reject(err);
+        reject(err);
       });
     });
   }
 
   observe(path, callback) {
     return new Promise((fulfill, reject) => {
-      this.service.put('/subscriptions/' + this.id + path).then((dataAndResponse) => {
+      this.service.put(`/subscriptions/${this.id}${path}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
-          let id = dataAndResponse.data['async-response-id'];
+          const id = dataAndResponse.data['async-response-id'];
           this.observations[id] = callback;
           fulfill(id);
         } else {
@@ -118,7 +117,7 @@ class Service extends EventEmitter {
   constructor(opts) {
     super();
     this.config = opts;
-    this.client = new Client(); 
+    this.client = new rest.Client();
     this.endpoints = [];
     this.addTlvSerializer();
   }
@@ -127,7 +126,7 @@ class Service extends EventEmitter {
     this.pollTimer = setInterval(() => {
       this.get('/notification/pull').then((dataAndResponse) => {
         this._processEvents(dataAndResponse.data);
-      }).catch(err => {
+      }).catch(() => {
         console.error('Failed to pull notifications!');
       });
     }, interval);
@@ -141,9 +140,7 @@ class Service extends EventEmitter {
     this.client.serializers.add({
       name: 'buffer-serializer',
       isDefault: false,
-      match: (request) => {
-        return request.headers['Content-Type'] === 'application/vnd.oma.lwm2m+tlv';
-      },
+      match: request => request.headers['Content-Type'] === 'application/vnd.oma.lwm2m+tlv',
       serialize: (data, nrcEventEmitter, serializedCallback) => {
         if (data instanceof Buffer) {
           nrcEventEmitter('serialized', data);
@@ -155,10 +152,10 @@ class Service extends EventEmitter {
 
   get(path) {
     return new Promise((fulfill, reject) => {
-      let args = {
+      const args = {
         headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
       };
-      let url = this.config['host'] + path;
+      const url = this.config.host + path;
       const getRequest = this.client.get(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
@@ -173,11 +170,11 @@ class Service extends EventEmitter {
 
   put(path, tlvBuffer) {
     return new Promise((fulfill, reject) => {
-      let args = {
+      const args = {
         headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
-        data: tlvBuffer
+        data: tlvBuffer,
       };
-      let url = this.config['host'] + path;
+      const url = this.config.host + path;
       const putRequest = this.client.put(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
@@ -192,10 +189,10 @@ class Service extends EventEmitter {
 
   post(path) {
     return new Promise((fulfill, reject) => {
-      let args = {
+      const args = {
         headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
       };
-      let url = this.config['host'] + path;
+      const url = this.config.host + path;
       const postRequest = this.client.post(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
@@ -209,32 +206,30 @@ class Service extends EventEmitter {
   }
 
   _processEvents(events) {
-    for (let i = 0; i < events['registrations'].length; i++) {
-      let id = events['registrations'][i]['name'];
+    for (let i = 0; i < events.registrations.length; i += 1) {
+      const id = events.registrations[i].name;
       if (this.endpoints[id]) {
         this.endpoints[id].emit('register');
       }
     }
 
-    for (let i = 0; i < events['reg-updates'].length; i++) {
-      let id = events['reg-updates'][i]['name'];
+    for (let i = 0; i < events['reg-updates'].length; i += 1) {
+      const id = events['reg-updates'][i].name;
       if (this.endpoints[id]) {
         this.endpoints[id].emit('update');
       }
     }
 
-    for (let i = 0; i < events['de-registrations'].length; i++) {
-      let id = events['de-registrations'][i]['name'];
+    for (let i = 0; i < events['de-registrations'].length; i += 1) {
+      const id = events['de-registrations'][i].name;
       if (this.endpoints[id]) {
         this.endpoints[id].emit('deregister');
       }
     }
 
-    let responses = events['async-responses'].sort((x, y) => {
-      return x['timestamp'] - y['timestamp'];
-    });
-    for (let i = 0; i < responses.length; i++) {
-      let res = responses[i];
+    const responses = events['async-responses'].sort((x, y) => x.timestamp - y.timestamp);
+    for (let i = 0; i < responses.length; i += 1) {
+      const res = responses[i];
       this.emit('async-response', res);
     }
   }
@@ -244,7 +239,7 @@ class Service extends EventEmitter {
       this.endpoints[id] = new Endpoint(this, id);
     }
 
-    return this.endpoints[id]; 
+    return this.endpoints[id];
   }
 
   attachEndpoint(ep) {

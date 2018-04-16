@@ -1,4 +1,4 @@
-'use strict';
+
 
 const api = require('./8dev_restapi.js');
 const emulate = require('./8dev_emulate/nodes/index.js');
