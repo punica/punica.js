@@ -1,111 +1,39 @@
-'use strict';
+const { TLV } = require('../../lwm2m/index.js');
+const { Resource } = require('./resourceInstance.js');
 
-const lwm2m = require('./lwm2m.js');
-const { RESOURCE_TYPE, ResourceInstance } = require('./resourceInstance.js');
+const { getDictionaryByValue } = TLV;
 
 class ObjectInstance {
-  constructor(objectID, instanceID, hidden = false) {
-    this.objectID = objectID;
-    this.instanceId = instanceID;
-    this.hidden = hidden;
-    this.resources = {};
+  constructor(description) {
+    this.identifier = description.identifier;
+    this.hidden = description.hidden === undefined ? false : description.hidden;
+    this.resources = [];
   }
 
-  addResource(identifier, permissions, type, value, handler, notifyOnChange) {
-    // TODO: Add implementation for multiple instance resources.
-    this.resources[`${identifier}`] = new ResourceInstance(identifier, permissions, type, value, handler, notifyOnChange);
+  getResource(identifier) {
+    return getDictionaryByValue(this.resources, 'identifier', identifier);
   }
 
-  writeResource(identifier, value, force = false) {
-    return this.resources[identifier].writeValue(value, force);
-  }
+  createResource(description) {
+    let resource = this.getResource(description.identifier);
 
-  deleteResource(identifier, force = false) {
-    return this.resources[identifier].deleteResource(force);
-  }
+    if (resource === undefined) {
+      resource = new Resource(description);
+      this.resources.push(resource);
 
-  executeResource(identifier, force = false) {
-    return this.resources[identifier].executeResource(force);
-  }
-
-  getResourceValue(identifier, callback) {
-    if (typeof callback !== 'function') {
-      return this.resources[identifier].value;
+      return resource;
     }
-    callback(this.resources[identifier].value);
-  }
 
-  observeResource(identifier, handler) {
-    this.resources[identifier].addObservationHandler(handler);
-  }
-
-  unobserveResource(identifier) {
-    this.resources[identifier].deleteObservationHandler();
-  }
-
-  getResourceTLV(identifier, callback) {
-    return this.resources[identifier].getTLVBuffer(callback);
-  }
-
-  getAllResourcesTLV() {
-    // TODO: Review and change iterating through dictionary (not array anymore)
-    const allBuffers = [];
-    for (let iterator = 0; iterator < this.resources.length; iterator += 1) {
-      allBuffers.push(this.resources[iterator].getTLV());
+    if (resource.value instanceof Array) {
+      resource.value.push(description.value);
+    } else {
+      resource.value = [resource.value, description.value];
     }
-    return Buffer.concat(allBuffers);
-  }
 
-  writeFromTLV(payload) {
-    const resourcesList = lwm2m.parseTLV(payload);
-    let value;
-
-    if (resourcesList[0].getType() === lwm2m.TYPE_RESOURCE) {
-      if (this.resources[`${resourcesList[0].getIdentifier()}`] === undefined) {
-        return '4.04';
-      }
-
-      switch (this.resources[`${resourcesList[0].getIdentifier()}`].type) {
-        case RESOURCE_TYPE.NONE: {
-          if (resourcesList[0].valueLength !== 0) {
-            return '4.00';
-          }
-          value = undefined;
-          break;
-        }
-
-        case RESOURCE_TYPE.BOOLEAN: {
-          value = resourcesList[0].getBooleanValue();
-          break;
-        }
-
-        case RESOURCE_TYPE.INTEGER: {
-          value = resourcesList[0].getIntegerValue();
-          break;
-        }
-
-        case RESOURCE_TYPE.FLOAT: {
-          value = resourcesList[0].getFloatValue();
-          break;
-        }
-
-        case RESOURCE_TYPE.STRING: {
-          value = resourcesList[0].getStringValue();
-          break;
-        }
-
-        case RESOURCE_TYPE.OPAQUE: {
-          value = resourcesList[0].binaryValue;
-          break;
-        }
-
-        default: {
-          return '5.00';
-        }
-      }
-      return this.writeResource(`${resourcesList[0].getIdentifier()}`, value)
-    }
+    return resource;
   }
 }
 
-module.exports = ObjectInstance;
+module.exports = {
+  ObjectInstance,
+};
