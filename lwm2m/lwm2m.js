@@ -311,7 +311,7 @@ function decodeTLV(buffer) {
   index += 1;
 
   i = index;
-  while (i <= (index + (buffer[0] >> 5) & 0b1)) { // eslint-disable-line no-bitwise
+  if ((index + (buffer[0] >> 5) & 0b1) > 0) { // eslint-disable-line no-bitwise
     if (buffer[i] === undefined) {
       throw Error('Given buffer is corrupted (missing data)');
     }
