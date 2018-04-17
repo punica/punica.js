@@ -380,7 +380,7 @@ function decodeMultipleResourceInstancesTLV(buffer, resources) {
   while (index < buffer.length) {
     decodedResourceInstance = decodeResourceInstanceValue(
       changeBufferSize(buffer, index),
-      resources,
+      resources
     );
     decodedResourceValues.push(decodedResourceInstance.value);
     index += decodedResourceInstance.tlvSize;

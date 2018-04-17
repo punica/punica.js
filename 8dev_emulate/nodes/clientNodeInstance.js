@@ -225,7 +225,7 @@ class ClientNodeInstance extends EventEmitter {
     clientPSK = null,
     publicKey = null,
     serverRPK = null,
-    secretKey = null,
+    secretKey = null
   ) {
     const newSecurityObject = this.createObjectInstance(0, true);
     // LwM2M Server URI
