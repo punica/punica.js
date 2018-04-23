@@ -2,6 +2,8 @@
 
 const EventEmitter = require('events');
 const rest = require('node-rest-client');
+const express = require('express');
+const parser = require('body-parser');
 
 class Endpoint extends EventEmitter {
   constructor(service, id) {
@@ -16,7 +18,6 @@ class Endpoint extends EventEmitter {
       const ID = resp.id;
       const code = resp.status;
       const data = resp.payload;
-
       if (this.transactions[ID] !== undefined) {
         this.transactions[ID](code, data);
         delete this.transactions[ID];
@@ -120,20 +121,46 @@ class Service extends EventEmitter {
     this.client = new rest.Client();
     this.endpoints = [];
     this.addTlvSerializer();
+    this.express = express();
+    this.express.use(parser.json());
   }
 
-  start(interval = 1234) {
-    this.pollTimer = setInterval(() => {
-      this.get('/notification/pull').then((dataAndResponse) => {
-        this._processEvents(dataAndResponse.data);
-      }).catch(() => {
-        console.error('Failed to pull notifications!');
+  start(interval) {
+    if (interval === undefined) {
+      const args = {
+        data: {
+          url: 'http://localhost:5727/notification',
+          headers: {},
+        },
+        headers: { 'Content-Type': 'application/json' },
+      };
+      this.express.put('/notification', (req, resp) => {
+        this._processEvents(req.body);
+        resp.send();
       });
-    }, interval);
+      this.server = this.express.listen(5727);
+      const setCallback = this.client.put(`${this.config.host}/notification/callback`, args, () => {});
+      setCallback.on('error', () => {
+        console.log('Failed to set a callback!');
+      });
+    } else {
+      this.pollTimer = setInterval(() => {
+        this.get('/notification/pull').then((dataAndResponse) => {
+          this._processEvents(dataAndResponse.data);
+        }).catch(() => {
+          console.error('Failed to pull notifications!');
+        });
+      }, interval);
+    }
   }
 
   stop() {
-    clearInterval(this.pollTimer);
+    if (this.server !== undefined) {
+      this.server.close();
+    }
+    if (this.pollTimer !== undefined) {
+      clearInterval(this.pollTimer);
+    }
   }
 
   addTlvSerializer() {

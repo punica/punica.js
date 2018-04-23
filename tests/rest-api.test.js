@@ -2,6 +2,7 @@ const chai = require('chai');
 const nock = require('nock');
 
 const { expect } = chai;
+const rest = require('node-rest-client');
 const response = require('./rest-response');
 const restAPI = require('../8dev_restapi.js');
 
@@ -191,41 +192,39 @@ describe('Rest API interface', () => {
         expect(typeof err).to.equal('object');
       }));
     });
-    service.stop();
   });
 
   describe('Service interface', () => {
     describe('start function', () => {
-      const defaultPullTime = 1234;
-      const timeError = 20;
-      const statusCode = 202;
-      nock(url)
-        .get('/notification/pull')
-        .times(4)
-        .reply(statusCode, response.oneAsyncResponse);
-
-      it('should send GET requests in order to pull out notifications every 1234 ms if start method is called without a parameter', () => {
-        const pullTime = [];
-        let pulledOnTime = false;
-        let timeDifference = null;
+      it('should send PUT request to register a callback and listen for notifications', (done) => {
+        this.client = new rest.Client();
+        nock(url)
+          .put('/notification/callback')
+          .reply(200);
         service.start();
-        return new Promise((fulfill) => {
-          service.on('async-response', () => {
-            pullTime.push(new Date().getTime());
-            if (pullTime.length === 2) {
-              service.stop();
-              timeDifference = Math.abs(defaultPullTime - pullTime[1] - pullTime[0]);
-              if (timeDifference >= timeError) {
-                pulledOnTime = true;
-              }
-              expect(pulledOnTime).to.equal(true);
-              fulfill();
-            }
-          });
+        nock(url)
+          .get(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.readRequest);
+        device.read(path, (statusCode, payload) => {
+          expect(typeof statusCode).to.equal('number');
+          expect(typeof payload).to.equal('string');
+          service.stop();
+          done();
         });
-      }).timeout(3000);
+        const args = {
+          data: response.readResponse,
+          headers: { 'Content-Type': 'application/json' },
+        };
+        this.client.put('http://localhost:5727/notification', args, () => {});
+      });
 
       it('should send GET requests in order to pull out notifications every interval of time in ms which is set by the parameter', () => {
+        const statusCode = 202;
+        nock(url)
+          .get('/notification/pull')
+          .times(4)
+          .reply(statusCode, response.oneAsyncResponse);
+        const timeError = 20;
         const pullTime = [];
         let timeDifference = null;
         const chosenTime = 200;

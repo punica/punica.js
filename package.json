@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/8devices/restserver-api#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "coap": "^0.21.0",
+    "express": "^4.16.3",
     "node-rest-client": "^3.1.0"
   },
   "devDependencies": {

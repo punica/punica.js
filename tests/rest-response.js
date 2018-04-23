@@ -39,6 +39,16 @@ module.exports = {
   observeRequest: {
     'async-response-id': '1521817656#367da52f-6d0c-8550-b218-571o',
   },
+  readResponse: {
+    registrations: [],
+    'reg-updates': [],
+    'de-registrations': [],
+    'async-responses': [
+      {
+        timestamp: 1400009933, id: '1521817656#367da52f-6d0c-8550-b218-571b', status: 200, payload: '5Ba3AAAAAA==',
+      },
+    ],
+  },
   responsesOfAllOperations: {
     registrations: [],
     'reg-updates': [],
