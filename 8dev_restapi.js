@@ -127,22 +127,20 @@ class Service extends EventEmitter {
 
   start(interval) {
     if (interval === undefined) {
-      const args = {
-        data: {
-          url: 'http://localhost:5727/notification',
-          headers: {},
-        },
-        headers: { 'Content-Type': 'application/json' },
+      const data = {
+        url: 'http://localhost:5727/notification',
+        headers: {},
       };
+      const type = 'application/json';
       this.express.put('/notification', (req, resp) => {
         this._processEvents(req.body);
         resp.send();
       });
       this.server = this.express.listen(5727);
-      const setCallback = this.client.put(`${this.config.host}/notification/callback`, args, () => {});
-      setCallback.on('error', () => {
-        console.log('Failed to set a callback!');
-      });
+      this.put('/notification/callback', data, type)
+        .catch(() => {
+          console.error('Failed to set a callback!');
+        });
     } else {
       this.pollTimer = setInterval(() => {
         this.get('/notification/pull').then((dataAndResponse) => {
@@ -195,11 +193,11 @@ class Service extends EventEmitter {
     });
   }
 
-  put(path, tlvBuffer) {
+  put(path, argument, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
       const args = {
-        headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
-        data: tlvBuffer,
+        headers: { 'Content-Type': type },
+        data: argument,
       };
       const url = this.config.host + path;
       const putRequest = this.client.put(url, args, (data, resp) => {
@@ -216,11 +214,8 @@ class Service extends EventEmitter {
 
   post(path) {
     return new Promise((fulfill, reject) => {
-      const args = {
-        headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
-      };
       const url = this.config.host + path;
-      const postRequest = this.client.post(url, args, (data, resp) => {
+      const postRequest = this.client.post(url, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
         dataAndResponse.resp = resp;
