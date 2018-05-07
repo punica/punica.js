@@ -117,7 +117,13 @@ class Endpoint extends EventEmitter {
 class Service extends EventEmitter {
   constructor(opts) {
     super();
-    this.config = opts;
+    this.config = {
+      host: 'http://localhost:8888',
+      interval: 1234,
+      polling: false,
+      port: 5728,
+    };
+    this.configure(opts);
     this.client = new rest.Client();
     this.endpoints = [];
     this.addTlvSerializer();
@@ -125,10 +131,20 @@ class Service extends EventEmitter {
     this.express.use(parser.json());
   }
 
-  start(interval) {
-    if (interval === undefined) {
+  configure(opts) {
+    Object.keys(opts).forEach((opt) => {
+      this.config[opt] = opts[opt];
+    });
+  }
+
+  start(opts) {
+    this.stop();
+    if (opts !== undefined) {
+      this.configure(opts);
+    }
+    if (!this.config.polling) {
       const data = {
-        url: 'http://localhost:5727/notification',
+        url: `http://localhost:${this.config.port}/notification`,
         headers: {},
       };
       const type = 'application/json';
@@ -136,7 +152,7 @@ class Service extends EventEmitter {
         this._processEvents(req.body);
         resp.send();
       });
-      this.server = this.express.listen(5727);
+      this.server = this.express.listen(this.config.port);
       this.put('/notification/callback', data, type)
         .catch(() => {
           console.error('Failed to set a callback!');
@@ -148,16 +164,18 @@ class Service extends EventEmitter {
         }).catch(() => {
           console.error('Failed to pull notifications!');
         });
-      }, interval);
+      }, this.config.interval);
     }
   }
 
   stop() {
     if (this.server !== undefined) {
       this.server.close();
+      this.server = undefined;
     }
     if (this.pollTimer !== undefined) {
       clearInterval(this.pollTimer);
+      this.pollTimer = undefined;
     }
   }
 

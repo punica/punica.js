@@ -201,7 +201,7 @@ describe('Rest API interface', () => {
         nock(url)
           .put('/notification/callback')
           .reply(200);
-        service.start();
+        service.start({ polling: false });
         nock(url)
           .get(`/endpoints/${deviceName}${path}`)
           .reply(202, response.readRequest);
@@ -215,21 +215,21 @@ describe('Rest API interface', () => {
           data: response.readResponse,
           headers: { 'Content-Type': 'application/json' },
         };
-        this.client.put('http://localhost:5727/notification', args, () => {});
+        this.client.put('http://localhost:5728/notification', args, () => {});
       });
 
-      it('should send GET requests in order to pull out notifications every interval of time in ms which is set by the parameter', () => {
+      it('should send GET requests to pull out notifications every interval of time in ms which is set by the parameter when initializing service object', () => {
         const statusCode = 202;
         nock(url)
           .get('/notification/pull')
-          .times(4)
+          .times(2)
           .reply(statusCode, response.oneAsyncResponse);
         const timeError = 20;
         const pullTime = [];
         let timeDifference = null;
         const chosenTime = 200;
         let pulledOnTime = false;
-        service.start(chosenTime);
+        service.start({ polling: true, interval: chosenTime });
         return new Promise((fulfill) => {
           service.on('async-response', () => {
             pullTime.push(new Date().getTime());
@@ -249,16 +249,38 @@ describe('Rest API interface', () => {
 
     describe('stop function', () => {
       const statusCode = 202;
-      nock(url)
-        .get('/notification/pull')
-        .reply(statusCode, response.oneAsyncResponse);
+
+      it('should shut down notification listener and stop process notifications', (done) => {
+        nock(url)
+          .put('/notification/callback')
+          .reply(statusCode);
+        let recieved = false;
+        service.on('async-response', () => {
+          recieved = true;
+        });
+        service.start({ polling: false });
+        service.stop();
+        const args = {
+          data: response.readResponse,
+          headers: { 'Content-Type': 'application/json' },
+        };
+        const sendNotification = this.client.put('http://localhost:5728/notification', args, () => {});
+        sendNotification.on('error', (err) => {
+          expect(typeof err).to.equal('object');
+          expect(recieved).to.equal(false);
+          done();
+        });
+      });
+
       it('should stop sending GET requests for notification pulling', (done) => {
-        const chosenTime = 200;
+        nock(url)
+          .get('/notification/pull')
+          .reply(statusCode, response.oneAsyncResponse);
         let pulled = false;
         service.on('async-response', () => {
           pulled = true;
         });
-        service.start(chosenTime);
+        service.start({ polling: true, interval: 200 });
         service.stop();
         setTimeout(() => {
           expect(pulled).to.equal(false);
