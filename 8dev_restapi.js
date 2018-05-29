@@ -143,26 +143,17 @@ class Service extends EventEmitter {
       this.configure(opts);
     }
     if (!this.config.polling) {
-      const data = {
-        url: `http://localhost:${this.config.port}/notification`,
-        headers: {},
-      };
-      const type = 'application/json';
-      this.express.put('/notification', (req, resp) => {
-        this._processEvents(req.body);
-        resp.send();
-      });
-      this.server = this.express.listen(this.config.port);
-      this.put('/notification/callback', data, type)
-        .catch(() => {
-          console.error('Failed to set a callback!');
+      this.createServer();
+      this.registerNotificationCallback()
+        .catch((err) => {
+          console.error(`Failed to set notification callback: ${err}`);
         });
     } else {
       this.pollTimer = setInterval(() => {
-        this.get('/notification/pull').then((dataAndResponse) => {
-          this._processEvents(dataAndResponse.data);
-        }).catch(() => {
-          console.error('Failed to pull notifications!');
+        this.pullNotification().then((data) => {
+          this._processEvents(data);
+        }).catch((err) => {
+          console.error(`Failed to pull notifications: ${err}`);
         });
       }, this.config.interval);
     }
@@ -172,11 +163,101 @@ class Service extends EventEmitter {
     if (this.server !== undefined) {
       this.server.close();
       this.server = undefined;
+      this.deleteNotificationCallback();
     }
     if (this.pollTimer !== undefined) {
       clearInterval(this.pollTimer);
       this.pollTimer = undefined;
     }
+  }
+
+  createServer() {
+    this.express.put('/notification', (req, resp) => {
+      this._processEvents(req.body);
+      resp.send();
+    });
+    this.server = this.express.listen(this.config.port);
+  }
+
+  registerNotificationCallback() {
+    return new Promise((fulfill, reject) => {
+      const data = {
+        url: `http://localhost:${this.config.port}/notification`,
+        headers: {},
+      };
+      const type = 'application/json';
+      this.put('/notification/callback', data, type).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 204) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  deleteNotificationCallback() {
+    return new Promise((fulfill, reject) => {
+      this.delete('/notification/callback').then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 204) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  checkNotificationCallback() {
+    return new Promise((fulfill, reject) => {
+      this.get('/notification/callback').then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  pullNotification() {
+    return new Promise((fulfill, reject) => {
+      this.get('/notification/pull').then((dataAndResponse) => {
+        fulfill(dataAndResponse.data);
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  getDevices() {
+    return new Promise((fulfill, reject) => {
+      this.get('/endpoints').then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  getVersion() {
+    return new Promise((fulfill, reject) => {
+      this.get('/version').then((dataAndResponse) => {
+        fulfill(dataAndResponse.data);
+      }).catch((err) => {
+        reject(err);
+      });
+    });
   }
 
   addTlvSerializer() {
@@ -225,6 +306,21 @@ class Service extends EventEmitter {
         fulfill(dataAndResponse);
       });
       putRequest.on('error', (err) => {
+        reject(err);
+      });
+    });
+  }
+
+  delete(path) {
+    return new Promise((fulfill, reject) => {
+      const url = this.config.host + path;
+      const postRequest = this.client.delete(url, (data, resp) => {
+        const dataAndResponse = {};
+        dataAndResponse.data = data;
+        dataAndResponse.resp = resp;
+        fulfill(dataAndResponse);
+      });
+      postRequest.on('error', (err) => {
         reject(err);
       });
     });

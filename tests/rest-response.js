@@ -99,6 +99,40 @@ module.exports = {
       },
     ],
   },
+  notificationCallback: { url: 'http://localhost:5728/notification', headers: {} },
+  deleteCallback: Buffer.alloc(0),
+  registerCallback: Buffer.alloc(0),
+  getEndpoints: [{
+    name: 'threeSeven',
+    type: '8dev_3700',
+    status: 'ACTIVE',
+    q: true
+  },
+  {
+    name: 'threeEight',
+    type: '8dev_3800',
+    status: 'ACTIVE',
+    q: true
+  },
+  {
+    name: 'fourFour',
+    type: '8dev_4400',
+    status: 'ACTIVE',
+    q: true
+  },
+  {
+    name: 'fourFour1',
+    type: '8dev_4400',
+    status: 'ACTIVE',
+    q: true
+  },
+  {
+    name: 'fourFive',
+    type: '8dev_4500',
+    status: 'ACTIVE',
+    q: true
+  }],
+  version: '1.0.0',
   oneAsyncResponse: {
     registrations: [
       { name: 'fourFive' },

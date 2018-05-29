@@ -14,6 +14,10 @@ describe('Rest API interface', () => {
   const device = new restAPI.Device(service, deviceName);
   const tlvBuffer = Buffer.from([0xe4, 0x16, 0x44, 0x00, 0x00, 0x00, 0x01]);
 
+  afterEach(() => {
+    nock.cleanAll();
+  });
+
   describe('Endpoint interface', () => {
     describe('getObjects function', () => {
       it('should return an array of all endpont\'s resource paths', () => {
@@ -36,18 +40,20 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should return rejected promise with exception object if connection is not succesfull', () => device.getObjects().catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        device.getObjects()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('read function', () => {
-      nock(url)
-        .get(`/endpoints/${deviceName}${path}`)
-        .times(2)
-        .reply(202, response.readRequest);
-
       it('should return async-response-id ', () => {
+        nock(url)
+          .get(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.readRequest);
         const idRegex = /^\d+#[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/g;
         return device.read(path).then((resp) => {
           expect(typeof resp).to.equal('string');
@@ -56,6 +62,9 @@ describe('Rest API interface', () => {
       });
 
       it('should return status code and payload in a callback function which is given as a parameter ', (done) => {
+        nock(url)
+          .get(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.readRequest);
         device.read(path, (statusCode, payload) => {
           expect(typeof statusCode).to.equal('number');
           expect(typeof payload).to.equal('string');
@@ -74,18 +83,20 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => device.read(path).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        device.read(path)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('write function', () => {
-      nock(url)
-        .put(`/endpoints/${deviceName}${path}`)
-        .times(2)
-        .reply(202, response.writeRequest);
-
       it('should return async-response-id ', () => {
+        nock(url)
+          .put(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.writeRequest);
         const idRegex = /^\d+#[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/g;
         return device.write(path, () => {}, tlvBuffer).then((resp) => {
           expect(typeof resp).to.equal('string');
@@ -94,6 +105,9 @@ describe('Rest API interface', () => {
       });
 
       it('should return status code in a callback function which is given as a parameter ', (done) => {
+        nock(url)
+          .put(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.writeRequest);
         device.write(path, (statusCode, payload) => {
           expect(typeof statusCode).to.equal('number');
           expect(payload).to.equal(undefined);
@@ -112,18 +126,20 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => device.write(path, () => {}, tlvBuffer).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        device.write(path, () => {}, tlvBuffer)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('execute function', () => {
-      nock(url)
-        .post(`/endpoints/${deviceName}${path}`)
-        .times(2)
-        .reply(202, response.executeRequest);
-
       it('should return async-response-id ', () => {
+        nock(url)
+          .post(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.executeRequest);
         const idRegex = /^\d+#[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/g;
         return device.execute(path, () => {}).then((resp) => {
           expect(typeof resp).to.equal('string');
@@ -132,6 +148,9 @@ describe('Rest API interface', () => {
       });
 
       it('should return status code in a callback function which is given as a parameter ', (done) => {
+        nock(url)
+          .post(`/endpoints/${deviceName}${path}`)
+          .reply(202, response.executeRequest);
         device.execute(path, (statusCode, payload) => {
           expect(typeof statusCode).to.equal('number');
           expect(payload).to.equal(undefined);
@@ -150,18 +169,20 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => device.execute(path).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        device.execute(path)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('observe function', () => {
-      nock(url)
-        .put(`/subscriptions/${deviceName}${path}`)
-        .times(2)
-        .reply(202, response.observeRequest);
-
       it('should return async-response-id ', () => {
+        nock(url)
+          .put(`/subscriptions/${deviceName}${path}`)
+          .reply(202, response.observeRequest);
         const idRegex = /^\d+#[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/g;
         return device.observe(path).then((resp) => {
           expect(typeof resp).to.equal('string');
@@ -170,6 +191,9 @@ describe('Rest API interface', () => {
       });
 
       it('should return status code and payload in a callback function which is given as a parameter ', (done) => {
+        nock(url)
+          .put(`/subscriptions/${deviceName}${path}`)
+          .reply(202, response.observeRequest);
         device.observe(path, (statusCode, payload) => {
           expect(typeof statusCode).to.equal('number');
           expect(typeof payload).to.equal('string');
@@ -188,9 +212,13 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => device.observe(path).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        device.observe(path)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
   });
 
@@ -200,7 +228,9 @@ describe('Rest API interface', () => {
         this.client = new rest.Client();
         nock(url)
           .put('/notification/callback')
-          .reply(200);
+          .reply(204)
+          .delete('/notification/callback')
+          .reply(204);
         service.start({ polling: false });
         nock(url)
           .get(`/endpoints/${deviceName}${path}`)
@@ -219,7 +249,7 @@ describe('Rest API interface', () => {
       });
 
       it('should send GET requests to pull out notifications every interval of time in ms which is set by the parameter when initializing service object', () => {
-        const statusCode = 202;
+        const statusCode = 200;
         nock(url)
           .get('/notification/pull')
           .times(2)
@@ -253,7 +283,9 @@ describe('Rest API interface', () => {
       it('should shut down notification listener and stop process notifications', (done) => {
         nock(url)
           .put('/notification/callback')
-          .reply(statusCode);
+          .reply(204)
+          .delete('/notification/callback')
+          .reply(204);
         let recieved = false;
         service.on('async-response', () => {
           recieved = true;
@@ -286,6 +318,197 @@ describe('Rest API interface', () => {
           expect(pulled).to.equal(false);
           done();
         }, 300);
+      });
+    });
+
+    describe('createServer function', () => {
+      it('should create a server to listen for notifications', (done) => {
+        nock(url)
+          .delete('/notification/callback')
+          .reply(204);
+        service.createServer();
+        this.client = new rest.Client();
+        service.once('async-response', (resp) => {
+          try {
+            expect(resp).to.eql(response.readResponse['async-responses'][0]);
+            service.stop();
+            done();
+          } catch (e) {
+            service.stop();
+            done(new Error(e));
+          }
+        });
+        const args = {
+          data: response.readResponse,
+          headers: { 'Content-Type': 'application/json' },
+        };
+        this.client.put('http://localhost:5728/notification', args, () => {});
+      });
+    });
+
+    describe('registerNotificationCallback function', () => {
+      it('should return an object with empty buffer', () => {
+        nock(url)
+          .put('/notification/callback')
+          .reply(204, response.registerCallback);
+        return service.registerNotificationCallback().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp.length).to.equal(0);
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 204', () => {
+        nock(url)
+          .put('/notification/callback')
+          .reply(404);
+        return service.registerNotificationCallback().catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.registerNotificationCallback()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('deleteNotificationCallback function', () => {
+      it('should return an object with empty buffer', () => {
+        nock(url)
+          .delete('/notification/callback')
+          .reply(204, response.deleteCallback);
+        return service.deleteNotificationCallback().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp.length).to.equal(0);
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 204', () => {
+        nock(url)
+          .delete('/notification/callback')
+          .reply(404);
+        return service.deleteNotificationCallback().catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.deleteNotificationCallback()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('checkNotificationCallback function', () => {
+      it('should return an object with url and headers', () => {
+        nock(url)
+          .get('/notification/callback')
+          .reply(200, response.notificationCallback);
+        return service.checkNotificationCallback().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp).to.have.property('url');
+          expect(resp).to.have.property('headers');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 204', () => {
+        nock(url)
+          .get('/notification/callback')
+          .reply(404);
+        return service.checkNotificationCallback().catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.checkNotificationCallback()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('pullNotification function', () => {
+      it('should return an object with 4 properties (registrations, reg-updates, de-registrations, async-responses)', () => {
+        nock(url)
+          .get('/notification/pull')
+          .reply(200, response.oneAsyncResponse);
+        return service.pullNotification().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp).to.have.property('registrations');
+          expect(resp).to.have.property('reg-updates');
+          expect(resp).to.have.property('de-registrations');
+          expect(resp).to.have.property('async-responses');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.pullNotification()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('getDevices function', () => {
+      it('should return an array of all endponts with their data', () => {
+        nock(url)
+          .get('/endpoints')
+          .reply(200, response.getEndpoints);
+        return service.getDevices().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp).to.be.a('array');
+          expect(resp[0]).to.have.property('name');
+          expect(resp[0]).to.have.property('type');
+          expect(resp[0]).to.have.property('status');
+          expect(resp[0]).to.have.property('q');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 200', () => {
+        nock(url)
+          .get('/endpoints')
+          .reply(404);
+        return service.getDevices().catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.getDevices()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('getVersion function', () => {
+      it('should return a buffer which defines the version of REST server', () => {
+        nock(url)
+          .get('/version')
+          .reply(200, response.version);
+        const versionRegex = /^1\.\d+\.\d+$/;
+        return service.getVersion().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp).to.match(versionRegex);
+          expect(resp.toString()).to.equal(response.version);
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.getVersion()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
       });
     });
 
@@ -328,9 +551,13 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => service.get(`/endpoints/${deviceName}${path}`).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        service.get(`/endpoints/${deviceName}${path}`)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('put function', () => {
@@ -346,9 +573,35 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => service.put(`/endpoints/${deviceName}${path}`, tlvBuffer).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        service.put(`/endpoints/${deviceName}${path}`, tlvBuffer)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('delete function', () => {
+      it('should return fullfilled promise with data and response if connection is succesfull', () => {
+        const statusCode = 204;
+        nock(url)
+          .delete('/notification/callback')
+          .reply(statusCode, response.deleteCallback);
+        return service.delete('/notification/callback').then((dataAndResponse) => {
+          expect(typeof dataAndResponse).to.equal('object');
+          expect(typeof dataAndResponse.data).to.equal('object');
+          expect(dataAndResponse.resp.statusCode).to.equal(statusCode);
+        });
+      });
+
+      it('should reject promise when connection fails', (done) => {
+        service.delete('/notification/callback')
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('post function', () => {
@@ -364,9 +617,13 @@ describe('Rest API interface', () => {
         });
       });
 
-      it('should reject promise when connection fails', () => service.post(`/endpoints/${deviceName}${path}`).catch((err) => {
-        expect(typeof err).to.equal('object');
-      }));
+      it('should reject promise when connection fails', (done) => {
+        service.post(`/endpoints/${deviceName}${path}`)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
     });
 
     describe('createNode function', () => {
