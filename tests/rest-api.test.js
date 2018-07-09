@@ -220,6 +220,35 @@ describe('Rest API interface', () => {
           });
       });
     });
+
+    describe('cancelObserve function', () => {
+      it('should return an object with empty buffer', () => {
+        nock(url)
+          .delete(`/subscriptions/${deviceName}${path}`)
+          .reply(204, response.deleteCallback);
+        return device.cancelObserve(path).then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp.length).to.equal(0);
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 204', () => {
+        nock(url)
+          .delete(`/subscriptions/${deviceName}${path}`)
+          .reply(404);
+        return device.cancelObserve(path).catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        device.cancelObserve(path)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
   });
 
   describe('Service interface', () => {

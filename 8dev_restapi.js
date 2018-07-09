@@ -112,6 +112,20 @@ class Endpoint extends EventEmitter {
       });
     });
   }
+
+  cancelObserve(path) {
+    return new Promise((fulfill, reject) => {
+      this.service.delete(`/subscriptions/${this.id}${path}`).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 204) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
 }
 
 class Service extends EventEmitter {
