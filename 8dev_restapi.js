@@ -116,11 +116,10 @@ class Endpoint extends EventEmitter {
   cancelObserve(path) {
     return new Promise((fulfill, reject) => {
       this.service.delete(`/subscriptions/${this.id}${path}`).then((dataAndResponse) => {
-        if (dataAndResponse.resp.statusCode === 204) {
-          fulfill(dataAndResponse.data);
-        } else {
-          reject(dataAndResponse.resp.statusCode);
-        }
+        // Promise is fulfilled with any status code.
+        // 204 means observation will be succesfully cancelled.
+        // 404 means observation will not be deleted because it was not registered or found.
+        fulfill(dataAndResponse.resp.statusCode);
       }).catch((err) => {
         reject(err);
       });
@@ -174,15 +173,19 @@ class Service extends EventEmitter {
   }
 
   stop() {
+    const promises = [];
+
     if (this.server !== undefined) {
       this.server.close();
       this.server = undefined;
-      this.deleteNotificationCallback();
+      promises.push(this.deleteNotificationCallback());
     }
     if (this.pollTimer !== undefined) {
       clearInterval(this.pollTimer);
       this.pollTimer = undefined;
     }
+
+    return Promise.all(promises);
   }
 
   createServer() {
@@ -215,11 +218,10 @@ class Service extends EventEmitter {
   deleteNotificationCallback() {
     return new Promise((fulfill, reject) => {
       this.delete('/notification/callback').then((dataAndResponse) => {
-        if (dataAndResponse.resp.statusCode === 204) {
-          fulfill(dataAndResponse.data);
-        } else {
-          reject(dataAndResponse.resp.statusCode);
-        }
+        // Promise is fulfilled with any status code.
+        // 204 means callback will be succesfully removed.
+        // 404 means callback will not be removed because it was not registered or found.
+        fulfill(dataAndResponse.resp.statusCode);
       }).catch((err) => {
         reject(err);
       });
