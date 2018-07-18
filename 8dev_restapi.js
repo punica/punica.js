@@ -4,6 +4,7 @@ const EventEmitter = require('events');
 const rest = require('node-rest-client');
 const express = require('express');
 const parser = require('body-parser');
+const ip = require('ip');
 
 class Endpoint extends EventEmitter {
   constructor(service, id) {
@@ -137,6 +138,7 @@ class Service extends EventEmitter {
       port: 5728,
     };
     this.configure(opts);
+    this.ipAddress = ip.address();
     this.client = new rest.Client();
     this.endpoints = [];
     this.addTlvSerializer();
@@ -199,7 +201,7 @@ class Service extends EventEmitter {
   registerNotificationCallback() {
     return new Promise((fulfill, reject) => {
       const data = {
-        url: `http://localhost:${this.config.port}/notification`,
+        url: `http://${this.ipAddress}:${this.config.port}/notification`,
         headers: {},
       };
       const type = 'application/json';
