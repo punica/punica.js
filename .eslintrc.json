@@ -9,7 +9,7 @@
   },
   "rules": {
     "comma-dangle": ["ERROR", "only-multiline", {"functions": "never"}],
-    "no-param-reassign": "WARN" ,
+    "no-param-reassign": "WARN",
     "no-underscore-dangle": "WARN",
     "prefer-destructuring": ["ERROR", {"object": true, "array": false}],
     "no-unused-vars": [

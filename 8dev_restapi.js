@@ -133,13 +133,19 @@ class Service extends EventEmitter {
     super();
     this.config = {
       host: 'http://localhost:8888',
+      ca: '',
+      authentication: false,
+      username: '',
+      password: '',
       interval: 1234,
       polling: false,
       port: 5728,
     };
+    this.authenticationToken = '';
+    this.tokenValidation = 3600;
     this.configure(opts);
     this.ipAddress = ip.address();
-    this.client = new rest.Client();
+    this.configureNodeRestClient();
     this.endpoints = [];
     this.addTlvSerializer();
     this.express = express();
@@ -152,31 +158,75 @@ class Service extends EventEmitter {
     });
   }
 
+  configureNodeRestClient() {
+    const opts = {
+      ca: this.config.ca
+    };
+    this.client = new rest.Client({ connection: opts });
+  }
+
   start(opts) {
-    this.stop();
-    if (opts !== undefined) {
-      this.configure(opts);
-    }
-    if (!this.config.polling) {
-      this.createServer();
-      this.registerNotificationCallback()
-        .catch((err) => {
-          console.error(`Failed to set notification callback: ${err}`);
-        });
-    } else {
-      this.pollTimer = setInterval(() => {
-        this.pullNotification().then((data) => {
-          this._processEvents(data);
+    return new Promise((fulfill, reject) => {
+      const promises = [];
+
+      promises.push(this.stop());
+
+      if (opts !== undefined) {
+        this.configure(opts);
+      }
+
+      if (this.config.authentication) {
+        const authenticatePromise = this.authenticate().then((data) => {
+          this.authenticationToken = data.access_token;
+          this.tokenValidation = data.expires_in;
+          const authenticateTime = 0.9 * (this.tokenValidation * 1000);
+          this.authenticateTimer = setInterval(() => {
+            this.authenticate().then((newData) => {
+              this.authenticationToken = newData.access_token;
+            }).catch((err) => {
+              console.error(`Failed to authenticate user: ${err}`);
+            });
+          }, authenticateTime);
         }).catch((err) => {
-          console.error(`Failed to pull notifications: ${err}`);
+          console.error(`Failed to authenticate user: ${err}`);
+          reject(err);
         });
-      }, this.config.interval);
-    }
+        promises.push(authenticatePromise);
+      }
+
+      Promise.all(promises).then(() => {
+        if (!this.config.polling) {
+          this.createServer().catch((err) => {
+            console.error(`Failed to create socket listener: ${err}`);
+            reject(err);
+          }).then(() => this.registerNotificationCallback()).catch((err) => {
+            console.error(`Failed to set notification callback: ${err}`);
+            reject(err);
+          })
+            .then(() => {
+              fulfill();
+            });
+        } else {
+          this.pollTimer = setInterval(() => {
+            this.pullNotification().then((data) => {
+              this._processEvents(data);
+            }).catch((err) => {
+              console.error(`Failed to pull notifications: ${err}`);
+            });
+          }, this.config.interval);
+          fulfill();
+        }
+      });
+    });
   }
 
   stop() {
     const promises = [];
 
+    if (this.authenticateTimer !== undefined) {
+      clearInterval(this.authenticateTimer);
+      this.authenticateTimer = undefined;
+    }
     if (this.server !== undefined) {
       this.server.close();
       this.server = undefined;
@@ -191,11 +241,34 @@ class Service extends EventEmitter {
   }
 
   createServer() {
-    this.express.put('/notification', (req, resp) => {
-      this._processEvents(req.body);
-      resp.send();
+    return new Promise((fulfill, reject) => {
+      this.express.put('/notification', (req, resp) => {
+        this._processEvents(req.body);
+        resp.send();
+      });
+      this.server = this.express.listen(this.config.port, fulfill);
+      this.server.on('error', reject);
     });
-    this.server = this.express.listen(this.config.port);
+  }
+
+  authenticate() {
+    return new Promise((fulfill, reject) => {
+      const data = {
+        name: this.config.username,
+        secret: this.config.password
+      };
+      const type = 'application/json';
+
+      this.post('/authenticate', data, type).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 201) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
   }
 
   registerNotificationCallback() {
@@ -205,6 +278,7 @@ class Service extends EventEmitter {
         headers: {},
       };
       const type = 'application/json';
+
       this.put('/notification/callback', data, type).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 204) {
           fulfill(dataAndResponse.data);
@@ -294,10 +368,13 @@ class Service extends EventEmitter {
 
   get(path) {
     return new Promise((fulfill, reject) => {
-      const args = {
-        headers: { 'Content-Type': 'application/vnd.oma.lwm2m+tlv' },
-      };
       const url = this.config.host + path;
+      const args = {};
+      args.headers = {};
+      if (this.config.authentication) {
+        args.headers.Authorization = `Bearer ${this.authenticationToken}`;
+      }
+
       const getRequest = this.client.get(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
@@ -312,11 +389,14 @@ class Service extends EventEmitter {
 
   put(path, argument, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
+      const url = this.config.host + path;
       const args = {
         headers: { 'Content-Type': type },
         data: argument,
       };
-      const url = this.config.host + path;
+      if (this.config.authentication) {
+        args.headers.Authorization = `Bearer ${this.authenticationToken}`;
+      }
       const putRequest = this.client.put(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
@@ -332,22 +412,34 @@ class Service extends EventEmitter {
   delete(path) {
     return new Promise((fulfill, reject) => {
       const url = this.config.host + path;
-      const postRequest = this.client.delete(url, (data, resp) => {
+      const args = {};
+      args.headers = {};
+      if (this.config.authentication) {
+        args.headers.Authorization = `Bearer ${this.authenticationToken}`;
+      }
+      const deleteRequest = this.client.delete(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
         dataAndResponse.resp = resp;
         fulfill(dataAndResponse);
       });
-      postRequest.on('error', (err) => {
+      deleteRequest.on('error', (err) => {
         reject(err);
       });
     });
   }
 
-  post(path) {
+  post(path, argument, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
       const url = this.config.host + path;
-      const postRequest = this.client.post(url, (data, resp) => {
+      const args = {
+        headers: { 'Content-Type': type },
+        data: argument,
+      };
+      if (this.config.authentication) {
+        args.headers.Authorization = `Bearer ${this.authenticationToken}`;
+      }
+      const postRequest = this.client.post(url, args, (data, resp) => {
         const dataAndResponse = {};
         dataAndResponse.data = data;
         dataAndResponse.resp = resp;
