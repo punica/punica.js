@@ -781,24 +781,6 @@ describe('Rest API interface', () => {
           });
       });
     });
-
-    describe('createNode function', () => {
-      it('should add a new endpoint in service endpoints array if the endpoint does not exist', () => {
-        const endpointID = 'testNode';
-        const endpoint = service.createNode(endpointID);
-        expect(typeof endpoint).to.equal('object');
-        expect(endpoint.id).to.equal(endpointID);
-        expect(service.endpoints[endpointID]).to.equal(endpoint);
-      });
-
-      it('should add endpoint to endponts array which belongs to service class', () => {
-        const attachedEndpointID = 'attachedNode';
-        const attachedEndpoint = service.createNode(attachedEndpointID);
-        service.attachEndpoint(attachedEndpoint);
-        expect(typeof service.endpoints[attachedEndpointID]).to.equal('object');
-        expect(service.endpoints[attachedEndpointID].id).to.equal(attachedEndpointID);
-      });
-    });
   });
 });
 

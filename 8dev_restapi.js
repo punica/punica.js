@@ -15,6 +15,24 @@ class Endpoint extends EventEmitter {
     this.transactions = {};
     this.observations = {};
 
+    this.service.on('register', (name) => {
+      if (this.id === name) {
+        this.emit('register');
+      }
+    });
+
+    this.service.on('update', (name) => {
+      if (this.id === name) {
+        this.emit('update');
+      }
+    });
+
+    this.service.on('deregister', (name) => {
+      if (this.id === name) {
+        this.emit('deregister');
+      }
+    });
+
     this.service.on('async-response', (resp) => {
       const ID = resp.id;
       const code = resp.status;
@@ -28,8 +46,6 @@ class Endpoint extends EventEmitter {
         this.observations[ID](code, data);
       }
     });
-
-    service.attachEndpoint(this);
   }
 
   getObjects() {
@@ -146,7 +162,6 @@ class Service extends EventEmitter {
     this.configure(opts);
     this.ipAddress = ip.address();
     this.configureNodeRestClient();
-    this.endpoints = [];
     this.addTlvSerializer();
     this.express = express();
     this.express.use(parser.json());
@@ -454,23 +469,17 @@ class Service extends EventEmitter {
   _processEvents(events) {
     for (let i = 0; i < events.registrations.length; i += 1) {
       const id = events.registrations[i].name;
-      if (this.endpoints[id]) {
-        this.endpoints[id].emit('register');
-      }
+      this.emit('register', id);
     }
 
     for (let i = 0; i < events['reg-updates'].length; i += 1) {
       const id = events['reg-updates'][i].name;
-      if (this.endpoints[id]) {
-        this.endpoints[id].emit('update');
-      }
+      this.emit('update', id);
     }
 
     for (let i = 0; i < events['de-registrations'].length; i += 1) {
       const id = events['de-registrations'][i].name;
-      if (this.endpoints[id]) {
-        this.endpoints[id].emit('deregister');
-      }
+      this.emit('deregister', id);
     }
 
     const responses = events['async-responses'].sort((x, y) => x.timestamp - y.timestamp);
@@ -478,18 +487,6 @@ class Service extends EventEmitter {
       const res = responses[i];
       this.emit('async-response', res);
     }
-  }
-
-  createNode(id) {
-    if (!this.endpoints[id]) {
-      this.endpoints[id] = new Endpoint(this, id);
-    }
-
-    return this.endpoints[id];
-  }
-
-  attachEndpoint(ep) {
-    this.endpoints[ep.id] = ep;
   }
 }
 
