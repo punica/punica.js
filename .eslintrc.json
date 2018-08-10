@@ -17,6 +17,7 @@
       {
         "varsIgnorePattern": "should|expect"
       }
-    ]
+    ],
+    "valid-jsdoc": "ERROR"
   }
 }
