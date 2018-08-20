@@ -22,15 +22,6 @@ function binaryToBitString(binaryData) {
   return binaryToInteger(binaryData).toString(2);
 }
 
-function hexBuffer(hexadecimalString) {
-  let hexString = '';
-  if (hexadecimalString.length % 2 === 1) {
-    hexString += '0';
-  }
-  hexString += hexadecimalString;
-  return Buffer.from(hexString, 'hex');
-}
-
 function changeBufferSize(buffer, start, end = buffer.length) {
   const bufferArray = [];
   let index = start;
@@ -64,7 +55,14 @@ function getDictionaryByValue(dictionaryList, keyName, value) {
 }
 
 function encodeResourceValue(resource) {
-  const buffer = Buffer.alloc(4); // Variable is used only in float conversion
+  const MIN_INT8 = -0x80;
+  const MAX_INT8 = 0x7f;
+  const MIN_INT16 = -0x8000;
+  const MAX_INT16 = 0x7fff;
+  const MIN_INT32 = -0x80000000;
+  const MAX_INT32 = 0x7fffffff;
+
+  let buffer;
 
   if (typeof (resource.type) !== 'number') {
     throw Error(`Unrecognised resource type type (${typeof (resource.type)})`);
@@ -83,20 +81,30 @@ function encodeResourceValue(resource) {
         throw Error(`Cannot encode ${typeof (resource.value)} as integer`);
       }
 
-      if (resource.value >> 7 === 1) { // eslint-disable-line no-bitwise
-        return hexBuffer(`00${resource.value.toString(16)}`);
-      } else if (resource.value >> 15 === 1) { // eslint-disable-line no-bitwise
-        return hexBuffer(`0000${resource.value.toString(16)}`);
-      } else if (resource.value >> 15 === 1) { // eslint-disable-line no-bitwise
-        return hexBuffer(`00000000${resource.value.toString(16)}`);
+
+      if (resource.value >= MIN_INT8 && resource.value <= MAX_INT8) {
+        buffer = Buffer.alloc(1);
+        buffer.writeInt8(resource.value);
+      } else if (resource.value >= MIN_INT16 && resource.value <= MAX_INT16) {
+        buffer = Buffer.alloc(2);
+        buffer.writeInt16BE(resource.value);
+      } else if (resource.value >= MIN_INT32 && resource.value <= MAX_INT32) {
+        buffer = Buffer.alloc(4);
+        buffer.writeInt32BE(resource.value);
+      } else {
+        // XXX: this could be implemented with long.js module,
+        // but until there's a real issue no need to add another dependency
+        throw Error('64-bit integers are not supported');
       }
-      return hexBuffer(resource.value.toString(16));
+
+      return buffer;
 
     case RESOURCE_TYPE.FLOAT: {
       if (typeof (resource.value) !== 'number') {
         throw Error(`Cannot encode ${typeof (resource.value)} as float`);
       }
 
+      buffer = Buffer.alloc(4);
       buffer.writeFloatBE(resource.value);
       return buffer;
     }
