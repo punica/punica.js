@@ -65,7 +65,7 @@ function encodeResourceValue(resource) {
   let buffer;
 
   if (typeof (resource.type) !== 'number') {
-    throw Error(`Unrecognised resource type type (${typeof (resource.type)})`);
+    throw Error(`Unrecognised type (${typeof (resource.type)})`);
   }
 
   switch (resource.type) {
@@ -131,7 +131,7 @@ function encodeResourceValue(resource) {
       return resource.value;
 
     default:
-      throw Error(`Unrecognised resource type (${resource.type})`);
+      throw Error(`Unrecognised type (${resource.type})`);
   }
 }
 
@@ -181,7 +181,7 @@ function decodeResourceValue(buffer, resource) {
   }
 }
 
-function encodeTLV(object) {
+function encode(object) {
   let identifierBuffer;
   let lengthBuffer;
   let typeByte = 0;
@@ -239,8 +239,8 @@ function encodeTLV(object) {
   ]);
 }
 
-function encodeResourceInstanceTLV(resourceInstance) {
-  return encodeTLV({
+function encodeResourceInstance(resourceInstance) {
+  return encode({
     type: TYPE.RESOURCE_INSTANCE,
     identifier: resourceInstance.identifier,
     value: encodeResourceValue(resourceInstance),
@@ -251,57 +251,57 @@ function encodeMultipleResourcesTLV(resources) {
   const resourceInstancesBuffers = [];
 
   for (let index = 0; index < resources.value.length; index += 1) {
-    resourceInstancesBuffers.push(encodeResourceInstanceTLV({
+    resourceInstancesBuffers.push(encodeResourceInstance({
       type: resources.type,
       identifier: index,
       value: resources.value[index],
     }));
   }
 
-  return encodeTLV({
+  return encode({
     type: TYPE.MULTIPLE_RESOURCE,
     identifier: resources.identifier,
     value: Buffer.concat(resourceInstancesBuffers),
   });
 }
 
-function encodeResourceTLV(resource) {
+function encodeResource(resource) {
   if (resource.value instanceof Array) {
     return encodeMultipleResourcesTLV(resource);
   }
 
-  return encodeTLV({
+  return encode({
     type: TYPE.RESOURCE,
     identifier: resource.identifier,
     value: encodeResourceValue(resource),
   });
 }
 
-function encodeObjectInstanceTLV(objectInstance) {
+function encodeObjectInstance(objectInstance) {
   const resourcesBuffers = [];
 
   for (let index = 0; index < objectInstance.resources.length; index += 1) {
-    resourcesBuffers.push(encodeResourceTLV(objectInstance.resources[index]));
+    resourcesBuffers.push(encodeResource(objectInstance.resources[index]));
   }
 
-  return encodeTLV({
+  return encode({
     type: TYPE.OBJECT_INSTANCE,
     identifier: objectInstance.identifier,
     value: Buffer.concat(resourcesBuffers),
   });
 }
 
-function encodeObjectTLV(object) {
+function encodeObject(object) {
   const objectInstancesBuffers = [];
 
   for (let index = 0; index < object.objectInstances.length; index += 1) {
-    objectInstancesBuffers.push(encodeObjectInstanceTLV(object.objectInstances[index]));
+    objectInstancesBuffers.push(encodeObjectInstance(object.objectInstances[index]));
   }
 
   return Buffer.concat(objectInstancesBuffers);
 }
 
-function decodeTLV(buffer) {
+function decode(buffer) {
   let i;
   let valueIdentifier;
   let index = 1;
@@ -352,8 +352,8 @@ function decodeTLV(buffer) {
   };
 }
 
-function decodeResourceInstanceTLV(buffer, resources) {
-  const decodedResourceInstance = decodeTLV(buffer);
+function decodeResourceInstance(buffer, resources) {
+  const decodedResourceInstance = decode(buffer);
 
   if (decodedResourceInstance.type !== TYPE.RESOURCE_INSTANCE) {
     throw Error('Decoded resource TLV type is not resource instance');
@@ -368,7 +368,7 @@ function decodeResourceInstanceTLV(buffer, resources) {
 }
 
 function decodeResourceInstanceValue(buffer, resourceInstance) {
-  const decodedResourceInstance = decodeTLV(buffer);
+  const decodedResourceInstance = decode(buffer);
 
   if (decodedResourceInstance.type !== TYPE.RESOURCE_INSTANCE) {
     throw Error('Decoded resource TLV type is not resource instance');
@@ -401,8 +401,8 @@ function decodeMultipleResourceInstancesTLV(buffer, resources) {
   };
 }
 
-function decodeResourceTLV(buffer, resource) {
-  const decodedResource = decodeTLV(buffer);
+function decodeResource(buffer, resource) {
+  const decodedResource = decode(buffer);
   let resourceValue;
 
   if (resource.identifier !== decodedResource.identifier) {
@@ -425,8 +425,8 @@ function decodeResourceTLV(buffer, resource) {
   };
 }
 
-function decodeObjectInstanceTLV(buffer, objectInstance) {
-  const decodedObjectInstance = decodeTLV(buffer);
+function decodeObjectInstance(buffer, objectInstance) {
+  const decodedObjectInstance = decode(buffer);
   const decodedResources = [];
   let remainingBuffer;
   let resourceIdentifier;
@@ -436,7 +436,7 @@ function decodeObjectInstanceTLV(buffer, objectInstance) {
 
   while (index < decodedObjectInstance.value.length) {
     remainingBuffer = changeBufferSize(decodedObjectInstance.value, index);
-    resourceIdentifier = decodeTLV(remainingBuffer).identifier;
+    resourceIdentifier = decode(remainingBuffer).identifier;
 
     resourceDescription = getDictionaryByValue(objectInstance.resources, 'identifier', resourceIdentifier);
 
@@ -444,7 +444,7 @@ function decodeObjectInstanceTLV(buffer, objectInstance) {
       throw Error(`No resource description found (x/${objectInstance.identifier}/${resourceIdentifier})`);
     }
 
-    decodedResource = decodeResourceTLV(remainingBuffer, resourceDescription);
+    decodedResource = decodeResource(remainingBuffer, resourceDescription);
     decodedResources.push(decodedResource);
     index += decodedResource.tlvSize;
   }
@@ -456,7 +456,7 @@ function decodeObjectInstanceTLV(buffer, objectInstance) {
 }
 
 
-function decodeObjectTLV(buffer, object) {
+function decodeObject(buffer, object) {
   const decodedObjectInstances = [];
   let remainingBuffer;
   let objectInstanceIdentifier;
@@ -466,7 +466,7 @@ function decodeObjectTLV(buffer, object) {
 
   while (index < buffer.length) {
     remainingBuffer = changeBufferSize(buffer, index);
-    objectInstanceIdentifier = decodeTLV(remainingBuffer).identifier;
+    objectInstanceIdentifier = decode(remainingBuffer).identifier;
 
     objectInstanceDescription = getDictionaryByValue(object.objectInstances, 'identifier', objectInstanceIdentifier);
 
@@ -474,7 +474,7 @@ function decodeObjectTLV(buffer, object) {
       throw Error(`No object instance description found (/${object.identifier}/${objectInstanceIdentifier})`);
     }
 
-    decodedObjectInstance = decodeObjectInstanceTLV(remainingBuffer, objectInstanceDescription);
+    decodedObjectInstance = decodeObjectInstance(remainingBuffer, objectInstanceDescription);
     decodedObjectInstances.push(decodedObjectInstance);
     index += decodedObjectInstance.tlvSize;
   }
@@ -489,16 +489,16 @@ module.exports = {
   TYPE,
   RESOURCE_TYPE,
   getDictionaryByValue,
-  encodeTLV,
-  decodeTLV,
+  encode,
+  decode,
   encodeResourceValue,
   decodeResourceValue,
-  encodeResourceTLV,
-  decodeResourceTLV,
-  encodeResourceInstanceTLV,
-  decodeResourceInstanceTLV,
-  encodeObjectInstanceTLV,
-  decodeObjectInstanceTLV,
-  encodeObjectTLV,
-  decodeObjectTLV,
+  encodeResource,
+  decodeResource,
+  encodeResourceInstance,
+  decodeResourceInstance,
+  encodeObjectInstance,
+  decodeObjectInstance,
+  encodeObject,
+  decodeObject,
 };
