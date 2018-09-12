@@ -1,3 +1,7 @@
+/**
+ * Represents LwM2M variable (identifier) types (OBJECT_INSTANCE,
+ * MULTIPLE_RESOURCE, RESOURCE_INSTANCE, RESOURCE).
+*/
 const TYPE = {
   OBJECT_INSTANCE: 0b00,
   MULTIPLE_RESOURCE: 0b10,
@@ -5,6 +9,9 @@ const TYPE = {
   RESOURCE: 0b11,
 };
 
+/**
+ * Represents resource type (NONE, BOOLEAN, INTEGER, FLOAT, STRING, OPAQUE).
+ */
 const RESOURCE_TYPE = {
   NONE: 0,
   BOOLEAN: 1,
@@ -14,14 +21,34 @@ const RESOURCE_TYPE = {
   OPAQUE: 5,
 };
 
+/**
+ * Converts bytes to integer.
+ * @private
+ * @param {object} binaryData - Buffer which will be converted.
+ * @returns {number} integer - Integer value.
+ */
 function binaryToInteger(binaryData) {
   return parseInt(binaryData.toString('hex'), 16);
 }
 
+/**
+ * Converts bytes to string.
+ * @private
+ * @param {object} binaryData - Buffer which will be converted.
+ * @returns {string} string - String value.
+ */
 function binaryToBitString(binaryData) {
   return binaryToInteger(binaryData).toString(2);
 }
 
+/**
+ * Changes buffer size.
+ * @private
+ * @param {object} buffer - Buffer which size will be changed.
+ * @param {number} start - Buffer's start index.
+ * @param {number} end - Buffer's end index.
+ * @returns {object} buffer - New size buffer.
+ */
 function changeBufferSize(buffer, start, end = buffer.length) {
   const bufferArray = [];
   let index = start;
@@ -50,10 +77,30 @@ function changeBufferSize(buffer, start, end = buffer.length) {
   return Buffer.from(bufferArray);
 }
 
+/**
+ * Gets dictionary by given name of the key and value.
+ * @param {object} dictionaryList - Dictionary list.
+ * @param {Object|string} keyName - Name of the key
+ * @param {Object|string|number} value - Value
+ * @returns {Object|string|number} dictionary
+ */
 function getDictionaryByValue(dictionaryList, keyName, value) {
   return dictionaryList.find(dictionary => (dictionary[keyName] === value));
 }
 
+/**
+ * Encodes value of the resource.
+ * @param {object} resource - Object which stores resource value and value's type.
+ * @returns {object} buffer - Buffer of encoded value.
+ * @example
+ * const resource = {
+ *  type: TLV.RESOURCE_TYPE.INTEGER,
+ *  value: 1
+ * };
+ *
+ * const encodedValue = encodeResourceValue(resource);
+ * // encodedValue = <Buffer 01>
+ */
 function encodeResourceValue(resource) {
   const MIN_INT8 = -0x80;
   const MAX_INT8 = 0x7f;
@@ -135,6 +182,20 @@ function encodeResourceValue(resource) {
   }
 }
 
+/**
+ * Decodes value of the resource.
+ * @param {object} buffer - Buffer which will be decoded.
+ * @param {object} resource - Object which stores resource value's type.
+ * @returns {Object|string|number|boolean} value - Decoded value in specified type
+ * @example
+ * const buffer = Buffer.from([0x01]);
+ * const resource = {
+ *   type: TLV.RESOURCE_TYPE.INTEGER,
+ * };
+ *
+ * const decodedValue = decodeResourceValue(buffer, resource);
+ * // decodedValue = 1
+ */
 function decodeResourceValue(buffer, resource) {
   switch (resource.type) {
     case RESOURCE_TYPE.INTEGER:
@@ -181,6 +242,24 @@ function decodeResourceValue(buffer, resource) {
   }
 }
 
+/**
+ * Encodes ant type of instance (Object instance, multiple resources, resources instance, resource).
+ * @param {object} object - object which stores type, identifier and value.
+ * @returns {object} buffer - encoded TLV buffer.
+ * @example
+ * const resource = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ *   value: true
+ * };
+ *
+ * const encoded = encode({
+ *   type: TYPE.RESOURCE,
+ *   identifier: resource.identifier,
+ *   value: encodeResourceValue(resource),
+ * });
+ * // encoded = <Buffer e1 16 da 01>
+ */
 function encode(object) {
   let identifierBuffer;
   let lengthBuffer;
@@ -239,6 +318,20 @@ function encode(object) {
   ]);
 }
 
+/**
+ * Encodes resource instance to TLV buffer.
+ * @param {object} resourceInstance - Object which stores resource identifier, value and it's type.
+ * @returns {object} buffer - Buffer in TLV format
+ * @example
+ * const resourceInstance = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ *   value: true
+ * };
+ *
+ * const encoded = encodeResourceInstance(resourceInstance);
+ * // encoded = <Buffer e1 16 da 01>
+ */
 function encodeResourceInstance(resourceInstance) {
   return encode({
     type: TYPE.RESOURCE_INSTANCE,
@@ -247,6 +340,20 @@ function encodeResourceInstance(resourceInstance) {
   });
 }
 
+/**
+ * Encodes multiple resource values to TLV buffer.
+ * @param {object} resources - Object which stores identifier, resource type, and multiple values.
+ * @returns {object} buffer - TLV buffer.
+ * @example
+ * const resources = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ *   value: [true, false]
+ * };
+ *
+ * const encoded = encodeMultipleResources(resources);
+ * // encoded = <Buffer a6 16 da 41 00 01 41 01 00>
+ */
 function encodeMultipleResourcesTLV(resources) {
   const resourceInstancesBuffers = [];
 
@@ -265,6 +372,20 @@ function encodeMultipleResourcesTLV(resources) {
   });
 }
 
+/**
+ * Encodes resource to TLV buffer.
+ * @param {object} resource - Object which stores resource identifier, type and value.
+ * @returns {object} buffer - TLV buffer.
+ * @example
+ * const resource = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ *   value: true
+ * };
+ *
+ * const encoded = encodeResourcez(resource);
+ * // encoded = <Buffer e1 16 da 01>
+ */
 function encodeResource(resource) {
   if (resource.value instanceof Array) {
     return encodeMultipleResourcesTLV(resource);
@@ -277,6 +398,25 @@ function encodeResource(resource) {
   });
 }
 
+/**
+ * Encodes LwM2M object instance to TLV buffer.
+ * @param {object} objectInstance - LwM2M object.
+ * @returns {object} buffer - TLV buffer.
+ * @example
+ * const objectInstance = {
+ *   identifier: 0,
+ *   resources: [
+ *     {
+ *       identifier: 5815,
+ *       type: TLV.RESOURCE_TYPE.FLOAT,
+ *       value: 999.99
+ *     }
+ *   ]
+ * };
+ *
+ * const encoded = encodeObjectInstanceTLV(objectInstance);
+ * // encoded = <Buffer 07 00 e4 16 b7 44 79 ff 5c>
+ */
 function encodeObjectInstance(objectInstance) {
   const resourcesBuffers = [];
 
@@ -291,6 +431,28 @@ function encodeObjectInstance(objectInstance) {
   });
 }
 
+/**
+ * Encodes LwM2M object to TLV buffer.
+ * @param {object} object - LwM2M object.
+ * @returns {object} buffer - TLV buffer.
+ * @example
+ * const object = {
+ *   identifier: 3305,
+ *   objectInstances: [{
+ *     identifier: 0,
+ *     resources: [
+ *       {
+ *         identifier: 5815,
+ *         type: TLV.RESOURCE_TYPE.FLOAT,
+ *         value: 999.99
+ *       }
+ *     ]
+ *   }]
+ * };
+ *
+ * const encoded = encodeObject(object);
+ * // encoded = <Buffer 07 00 e4 16 b7 44 79 ff 5c>
+ */
 function encodeObject(object) {
   const objectInstancesBuffers = [];
 
@@ -301,6 +463,16 @@ function encodeObject(object) {
   return Buffer.concat(objectInstancesBuffers);
 }
 
+/**
+ * Decodes any TLV buffer.
+ * @param {object} buffer - encoded TLV buffer.
+ * @returns {object} object - Decoded object.
+ * @example
+ * const buffer = Buffer.from([0xe1, 0x16, 0xda, 0x01]);
+ *
+ * const decoded = TLV.decode(buffer);
+ * // decoded = { type: 3, identifier: 5850, value: <Buffer 01>, tlvSize: 4 }
+ */
 function decode(buffer) {
   let i;
   let valueIdentifier;
@@ -352,6 +524,22 @@ function decode(buffer) {
   };
 }
 
+/**
+ * Decodes resource instance.
+ * @param {object} buffer - Resource instance TLV buffer.
+ * @param {object} resources - Object which stores resource identifier and resource type.
+ * @return {object} decodedResource - Object which stores resource identifier,
+ * tlvSize resource type and value.
+ * @example
+ * const buffer = Buffer.from([0x61, 0x16, 0xda, 0x01]);
+ * const resources = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ * };
+ *
+ * const decoded = decodeResourceInstance(buffer, resources);
+ * // decoded = { identifier: 5850, tlvSize: 4, type: TLV.RESOURCE_TYPE.BOOLEAN, value: true }
+ */
 function decodeResourceInstance(buffer, resources) {
   const decodedResourceInstance = decode(buffer);
 
@@ -367,6 +555,20 @@ function decodeResourceInstance(buffer, resources) {
   };
 }
 
+/**
+ * Decodes resource instance value
+ * @param {object} buffer - Resource instance value TLV buffer
+ * @param {object} resourceInstance - Object which stores resource type
+ * @return {object} decodedResourceValue - Decoded resource value
+ * @example
+ * const buffer = Buffer.from([0x01]);
+ * const resourceInstance = {
+ *   type: TLV.RESOURCE_TYPE.INTEGER,
+ * };
+ *
+ * const decoded = decodeResourceInstance(buffer, resources);
+ * // decoded = 1
+ */
 function decodeResourceInstanceValue(buffer, resourceInstance) {
   const decodedResourceInstance = decode(buffer);
 
@@ -380,6 +582,22 @@ function decodeResourceInstanceValue(buffer, resourceInstance) {
   };
 }
 
+/**
+ * Decodes multiple resource TLV buffer
+ * @private
+ * @param {object} buffer - TLV buffer.
+ * @param {object} resources - Object which stores identifier and resource type.
+ * @returns {object} buffer - decoded resource.
+ * @example
+ * const buffer = Buffer.from([0xa6, 0x16, 0xda, 0x41, 0x00, 0x01, 0x41, 0x01, 0x00]);
+ * const resource = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ * };
+ *
+ * const decoded = decodeMultipleResourceInstancesTLV(buffer, resource);
+ * // decoded = { identifier: 5850, type: 1, value: [true, false], tlvSize: 9 }
+ */
 function decodeMultipleResourceInstancesTLV(buffer, resources) {
   const decodedResourceValues = [];
   let decodedResourceInstance;
@@ -401,6 +619,21 @@ function decodeMultipleResourceInstancesTLV(buffer, resources) {
   };
 }
 
+/**
+ * Decodes resource.
+ * @param {object} buffer - Resource TLV buffer
+ * @param {object} resource - Object which stores identifier and resource type.
+ * @returns {object} buffer - Decoded resource.
+ * @example
+ * const buffer = Buffer.from([0xe1, 0x16, 0xda, 0x01]);
+ * const resource = {
+ *   identifier: 5850,
+ *   type: TLV.RESOURCE_TYPE.BOOLEAN,
+ * };
+ *
+ * const decoded = decodeResource(buffer, resource);
+ * // decoded = { identifier: 5850, type: 1, value: true, tlvSize: 4 }
+ */
 function decodeResource(buffer, resource) {
   const decodedResource = decode(buffer);
   let resourceValue;
@@ -425,6 +658,26 @@ function decodeResource(buffer, resource) {
   };
 }
 
+/**
+ * Decodes object instance from TLV buffer.
+ * @param {object} buffer - TLV buffer.
+ * @param {object} objectInstance - Object which stores object instance identifier and resources.
+ * @returns {object} object - Decoded object instance.
+ * @example
+ * const buffer = Buffer.from([0x07, 0x00, 0xe4, 0x16, 0xb7, 0x44, 0x79, 0xff, 0x5c]);
+ * const objectInstance: {
+ *   identifier: 0,
+ *   resources: [
+ *     {
+ *       identifier: 5815,
+ *       type: TLV.RESOURCE_TYPE.FLOAT,
+ *     },
+ *   ]
+ * };
+ *
+ * const decoded = decodeObjectInstance(buffer, objectInstance);
+ * // decoded = { identifier: 0, resources: [ { identifier: 5815, type: 3 } ] }
+ */
 function decodeObjectInstance(buffer, objectInstance) {
   const decodedObjectInstance = decode(buffer);
   const decodedResources = [];
@@ -455,7 +708,46 @@ function decodeObjectInstance(buffer, objectInstance) {
   };
 }
 
-
+/**
+ * Decodes LwM2M object to TLV buffer.
+ * @param {object} buffer - TLV buffer.
+ * @param {object} object - Object which stores object instances with their resources.
+ * @returns {object} object - Decoded object.
+ * @example
+ * const buffer = Buffer.from([0x07, 0x00, 0xe4, 0x16, 0xb7, 0x44, 0x79, 0xff, 0x5c]);
+ * const object = {
+ *   identifier: 3305,
+ *   objectInstances: [{
+ *     identifier: 0,
+ *     resources: [
+ *       {
+ *         identifier: 5815,
+ *         type: TLV.RESOURCE_TYPE.FLOAT,
+ *       },
+ *     ]
+ *   }]
+ * };
+ *
+ * const decoded = decodeObject(buffer, object);
+ * /*
+ * decoded = {
+ *   identifier: 3305,
+ *   objectInstances: [
+ *     {
+ *       identifier: 0,
+ *       resources: [
+ *         {
+ *           identifier: 5815,
+ *           type: 3,
+ *           value: 999.989990234375,
+ *           tlvSize: 7
+ *         }
+ *       ]
+ *     }
+ *   ]
+ * }
+ * *\/
+ */
 function decodeObject(buffer, object) {
   const decodedObjectInstances = [];
   let remainingBuffer;
