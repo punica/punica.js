@@ -117,8 +117,8 @@ This class represents endpoint (device).
     * [new Endpoint(service, id)](#new_Endpoint_new)
     * [.getObjects()](#Endpoint+getObjects) ⇒ <code>Promise</code>
     * [.read(path, callback)](#Endpoint+read) ⇒ <code>Promise</code>
-    * [.write(path, callback, tlvBuffer)](#Endpoint+write) ⇒ <code>Promise</code>
-    * [.execute(path, callback)](#Endpoint+execute) ⇒ <code>Promise</code>
+    * [.write(path, callback, payload, type)](#Endpoint+write) ⇒ <code>Promise</code>
+    * [.execute(path, callback, payload, type)](#Endpoint+execute) ⇒ <code>Promise</code>
     * [.observe(path, callback)](#Endpoint+observe) ⇒ <code>Promise</code>
     * [.cancelObserve(path)](#Endpoint+cancelObserve) ⇒ <code>Promise</code>
 
@@ -184,23 +184,24 @@ endpoint.read(path, (status, payload) => {
 ```
 <a name="Endpoint+write"></a>
 
-### endpoint.write(path, callback, tlvBuffer) ⇒ <code>Promise</code>
+### endpoint.write(path, callback, payload, type) ⇒ <code>Promise</code>
 Sends request to write a value into endpoint's resource.
 
 **Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
 **Returns**: <code>Promise</code> - Promise with async response id  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| path | <code>string</code> | Resource path |
-| callback | <code>function</code> | Callback which will be called when async response is received |
-| tlvBuffer | <code>buffer</code> | Data in TLV format |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| path | <code>string</code> |  | Resource path |
+| callback | <code>function</code> |  | Callback which will be called when async response is received |
+| payload | <code>buffer</code> |  | Data (optional) |
+| type | <code>string</code> | <code>&quot;application/vnd.oma.lwm2m+tlv&quot;</code> | Content type (optional) |
 
 **Example**  
 ```js
 endpoint.write(path, (status) => {
   // status = 202
-}, tlvBuffer).then((asyncResponseId) => {
+}, payload).then((asyncResponseId) => {
   // asyncResponseId = 1533889926#870a3f17-3e21-b6ad-f63d-5cfe
 }).catch((err) => {
   // err - exception object or status code
@@ -208,16 +209,18 @@ endpoint.write(path, (status) => {
 ```
 <a name="Endpoint+execute"></a>
 
-### endpoint.execute(path, callback) ⇒ <code>Promise</code>
+### endpoint.execute(path, callback, payload, type) ⇒ <code>Promise</code>
 Sends request to execute endpoint's resource.
 
 **Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
 **Returns**: <code>Promise</code> - Promise with async response id  
 
-| Param | Type | Description |
-| --- | --- | --- |
-| path | <code>string</code> | Resource path |
-| callback | <code>function</code> | Callback which will be called when async response is received |
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| path | <code>string</code> |  | Resource path |
+| callback | <code>function</code> |  | Callback which will be called when async response is received |
+| payload | <code>buffer</code> |  | Data (optional) |
+| type | <code>string</code> | <code>&quot;application/vnd.oma.lwm2m+tlv&quot;</code> | Content type (optional) |
 
 **Example**  
 ```js

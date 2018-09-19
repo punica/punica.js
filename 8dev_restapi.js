@@ -136,20 +136,21 @@ class Endpoint extends EventEmitter {
    * Sends request to write a value into endpoint's resource.
    * @param {string} path - Resource path
    * @param {function} callback - Callback which will be called when async response is received
-   * @param {buffer} tlvBuffer - Data in TLV format
+   * @param {buffer} payload - Data (optional)
+   * @param {string} type - Content type (optional)
    * @returns {Promise} Promise with async response id
    * @example
    * endpoint.write(path, (status) => {
    *   // status = 202
-   * }, tlvBuffer).then((asyncResponseId) => {
+   * }, payload).then((asyncResponseId) => {
    *   // asyncResponseId = 1533889926#870a3f17-3e21-b6ad-f63d-5cfe
    * }).catch((err) => {
    *   // err - exception object or status code
    * });
    */
-  write(path, callback, tlvBuffer) {
+  write(path, callback, payload, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
-      this.service.put(`/endpoints/${this.id}${path}`, tlvBuffer).then((dataAndResponse) => {
+      this.service.put(`/endpoints/${this.id}${path}`, payload, type).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
           const id = dataAndResponse.data['async-response-id'];
           this.addAsyncCallback(id, callback);
@@ -167,6 +168,8 @@ class Endpoint extends EventEmitter {
    * Sends request to execute endpoint's resource.
    * @param {string} path - Resource path
    * @param {function} callback - Callback which will be called when async response is received
+   * @param {buffer} payload - Data (optional)
+   * @param {string} type - Content type (optional)
    * @returns {Promise} Promise with async response id
    * @example
    * endpoint.execute(path, (status) => {
@@ -177,9 +180,9 @@ class Endpoint extends EventEmitter {
    *   // err - exception object or status code
    * });
    */
-  execute(path, callback) {
+  execute(path, callback, payload, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
-      this.service.post(`/endpoints/${this.id}${path}`).then((dataAndResponse) => {
+      this.service.post(`/endpoints/${this.id}${path}`, payload, type).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
           const id = dataAndResponse.data['async-response-id'];
           this.addAsyncCallback(id, callback);
@@ -689,10 +692,14 @@ class Service extends EventEmitter {
   put(path, argument, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
       const url = this.config.host + path;
-      const args = {
-        headers: { 'Content-Type': type },
-        data: argument,
-      };
+      const args = {};
+      args.headers = {};
+
+      if (argument !== undefined) {
+        args.headers['Content-Type'] = type;
+        args.data = argument;
+      }
+
       if (this.config.authentication) {
         args.headers.Authorization = `Bearer ${this.authenticationToken}`;
       }
@@ -743,10 +750,14 @@ class Service extends EventEmitter {
   post(path, argument, type = 'application/vnd.oma.lwm2m+tlv') {
     return new Promise((fulfill, reject) => {
       const url = this.config.host + path;
-      const args = {
-        headers: { 'Content-Type': type },
-        data: argument,
-      };
+      const args = {};
+      args.headers = {};
+
+      if (argument !== undefined) {
+        args.headers['Content-Type'] = type;
+        args.data = argument;
+      }
+
       if (this.config.authentication) {
         args.headers.Authorization = `Bearer ${this.authenticationToken}`;
       }
