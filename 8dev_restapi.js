@@ -180,7 +180,7 @@ class Endpoint extends EventEmitter {
    *   // err - exception object or status code
    * });
    */
-  execute(path, callback, payload, type = 'application/vnd.oma.lwm2m+tlv') {
+  execute(path, callback, payload, type = 'text/plain') {
     return new Promise((fulfill, reject) => {
       this.service.post(`/endpoints/${this.id}${path}`, payload, type).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 202) {
