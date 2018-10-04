@@ -1,3 +1,5 @@
+const ip = require('ip');
+
 module.exports = {
   authentication: {
     access_token: 'eyJ0eXMiJ9.eyJppbiJ9.2HBtDz-bzdTPcYu-rNbwG-J9NC3P-f7kT6_YsNA',
@@ -111,7 +113,8 @@ module.exports = {
       },
     ],
   },
-  notificationCallback: { url: 'http://localhost:5728/notification', headers: {} },
+  notificationCallback: { url: `http://${ip.address()}:5728/notification`, headers: {} },
+  badNotificationCallback: { url: 'http://1.1.1.1:7777/notification', headers: {} },
   deleteCallback: Buffer.alloc(0),
   registerCallback: Buffer.alloc(0),
   getEndpoints: [{

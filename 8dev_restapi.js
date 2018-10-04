@@ -254,24 +254,24 @@ class Endpoint extends EventEmitter {
 
 /**
  * This class represents REST API service.
-   * @example
-   * const options = {
-   *   // REST server's address
-   *   host: 'http://localhost:8888',
-   *   // CA certificate
-   *   ca: '',
-   *   // authentication (true or false)
-   *   authentication: false,
-   *   username: '',
-   *   password: '',
-   *   // notification polling (true or false)
-   *   polling: false,
-   *   // time between each poll in miliseconds
-   *   interval: 1234,
-   *   // port for socket listener (not relevant if polling is enabled)
-   *   port: 5728,
-   * };
-   * new Service(options);
+ * @example
+ * const options = {
+ *   // REST server's address
+ *   host: 'http://localhost:8888',
+ *   // CA certificate
+ *   ca: '',
+ *   // authentication (true or false)
+ *   authentication: false,
+ *   username: '',
+ *   password: '',
+ *   // notification polling (true or false)
+ *   polling: false,
+ *   // time between each poll in miliseconds
+ *   interval: 1234,
+ *   // port for socket listener (not relevant if polling is enabled)
+ *   port: 5728,
+ * };
+ * new Service(options);
  */
 class Service extends EventEmitter {
   /**
@@ -555,7 +555,13 @@ class Service extends EventEmitter {
     return new Promise((fulfill, reject) => {
       this.get('/notification/callback').then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
-          fulfill(dataAndResponse.data);
+          if (dataAndResponse.data.url === `http://${this.ipAddress}:${this.config.port}/notification`) {
+            fulfill(dataAndResponse.data);
+          } else {
+            const err = new Error('Notification callback does not match current configuration');
+            err.code = 'EINVALIDCALLBACK';
+            reject(err);
+          }
         } else {
           reject(dataAndResponse.resp.statusCode);
         }
