@@ -36,8 +36,8 @@ service.start().then(() => {
 ## Classes
 
 <dl>
-<dt><a href="#Endpoint">Endpoint</a></dt>
-<dd><p>This class represents endpoint (device).</p>
+<dt><a href="#Device">Device</a></dt>
+<dd><p>This class represents device (endpoint).</p>
 </dd>
 <dt><a href="#Service">Service</a></dt>
 <dd><p>This class represents REST API service.</p>
@@ -106,27 +106,27 @@ MULTIPLE_RESOURCE, RESOURCE_INSTANCE, RESOURCE).</p>
 </dd>
 </dl>
 
-<a name="Endpoint"></a>
+<a name="Device"></a>
 
-## Endpoint
-This class represents endpoint (device).
+## Device
+This class represents device (endpoint).
 
 **Kind**: global class  
 
-* [Endpoint](#Endpoint)
-    * [new Endpoint(service, id)](#new_Endpoint_new)
-    * [.getObjects()](#Endpoint+getObjects) ⇒ <code>Promise</code>
-    * [.read(path, callback)](#Endpoint+read) ⇒ <code>Promise</code>
-    * [.write(path, callback, payload, type)](#Endpoint+write) ⇒ <code>Promise</code>
-    * [.execute(path, callback, payload, type)](#Endpoint+execute) ⇒ <code>Promise</code>
-    * [.observe(path, callback)](#Endpoint+observe) ⇒ <code>Promise</code>
-    * [.cancelObserve(path)](#Endpoint+cancelObserve) ⇒ <code>Promise</code>
+* [Device](#Device)
+    * [new Device(service, id)](#new_Device_new)
+    * [.getObjects()](#Device+getObjects) ⇒ <code>Promise</code>
+    * [.read(path, callback)](#Device+read) ⇒ <code>Promise</code>
+    * [.write(path, callback, payload, type)](#Device+write) ⇒ <code>Promise</code>
+    * [.execute(path, callback, payload, type)](#Device+execute) ⇒ <code>Promise</code>
+    * [.observe(path, callback)](#Device+observe) ⇒ <code>Promise</code>
+    * [.cancelObserve(path)](#Device+cancelObserve) ⇒ <code>Promise</code>
 
-<a name="new_Endpoint_new"></a>
+<a name="new_Device_new"></a>
 
-### new Endpoint(service, id)
-Constructor initiliazes given service object, endpoint's id
-and starts listening for events emited by service (when endpoint
+### new Device(service, id)
+Constructor initiliazes given service object, device's id
+and starts listening for events emited by service (when device
 registers, updates, deregisters, sends data), handles "async
 responses" and emits "register", "update", "deregister" events.
 
@@ -141,29 +141,29 @@ responses" and emits "register", "update", "deregister" events.
 const restAPI = require('restserver-api');
 
 const service = new restAPI.Service(serviceOptions);
-const endpoint = new restAPI.Endpoint(service, 'endpointId');
+const device = new restAPI.Device(service, 'deviceId');
 ```
-<a name="Endpoint+getObjects"></a>
+<a name="Device+getObjects"></a>
 
-### endpoint.getObjects() ⇒ <code>Promise</code>
-Sends request to get all endpoint's objects.
+### device.getObjects() ⇒ <code>Promise</code>
+Sends request to get all device's objects.
 
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
-**Returns**: <code>Promise</code> - Promise object with endpoint's objects  
+**Kind**: instance method of [<code>Device</code>](#Device)  
+**Returns**: <code>Promise</code> - Promise object with device's objects  
 **Example**  
 ```js
-endpoint.getObjects().then((resp) => {
+device.getObjects().then((resp) => {
   // resp = [ { uri: '/1/0' }, { uri: '/2/0' }, ... ]
 }).catch((err) => {
   // err - exception message object or status code
 });
 ```
-<a name="Endpoint+read"></a>
+<a name="Device+read"></a>
 
-### endpoint.read(path, callback) ⇒ <code>Promise</code>
-Sends request to read endpoint's resource data.
+### device.read(path, callback) ⇒ <code>Promise</code>
+Sends request to read device's resource data.
 
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
+**Kind**: instance method of [<code>Device</code>](#Device)  
 **Returns**: <code>Promise</code> - Promise with async response id  
 
 | Param | Type | Description |
@@ -173,7 +173,7 @@ Sends request to read endpoint's resource data.
 
 **Example**  
 ```js
-endpoint.read(path, (status, payload) => {
+device.read(path, (status, payload) => {
   // status = 200
   // payload = 4RbaAA==
 }).then((asyncResponseId) => {
@@ -182,12 +182,12 @@ endpoint.read(path, (status, payload) => {
   // err - exception object or status code
 });
 ```
-<a name="Endpoint+write"></a>
+<a name="Device+write"></a>
 
-### endpoint.write(path, callback, payload, type) ⇒ <code>Promise</code>
-Sends request to write a value into endpoint's resource.
+### device.write(path, callback, payload, type) ⇒ <code>Promise</code>
+Sends request to write a value into device's resource.
 
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
+**Kind**: instance method of [<code>Device</code>](#Device)  
 **Returns**: <code>Promise</code> - Promise with async response id  
 
 | Param | Type | Default | Description |
@@ -199,7 +199,7 @@ Sends request to write a value into endpoint's resource.
 
 **Example**  
 ```js
-endpoint.write(path, (status) => {
+device.write(path, (status) => {
   // status = 202
 }, payload).then((asyncResponseId) => {
   // asyncResponseId = 1533889926#870a3f17-3e21-b6ad-f63d-5cfe
@@ -207,12 +207,12 @@ endpoint.write(path, (status) => {
   // err - exception object or status code
 });
 ```
-<a name="Endpoint+execute"></a>
+<a name="Device+execute"></a>
 
-### endpoint.execute(path, callback, payload, type) ⇒ <code>Promise</code>
-Sends request to execute endpoint's resource.
+### device.execute(path, callback, payload, type) ⇒ <code>Promise</code>
+Sends request to execute device's resource.
 
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
+**Kind**: instance method of [<code>Device</code>](#Device)  
 **Returns**: <code>Promise</code> - Promise with async response id  
 
 | Param | Type | Default | Description |
@@ -220,11 +220,11 @@ Sends request to execute endpoint's resource.
 | path | <code>string</code> |  | Resource path |
 | callback | <code>function</code> |  | Callback which will be called when async response is received |
 | payload | <code>buffer</code> |  | Data (optional) |
-| type | <code>string</code> | <code>&quot;application/vnd.oma.lwm2m+tlv&quot;</code> | Content type (optional) |
+| type | <code>string</code> | <code>&quot;text/plain&quot;</code> | Content type (optional) |
 
 **Example**  
 ```js
-endpoint.execute(path, (status) => {
+device.execute(path, (status) => {
   // status = 202
 }).then((asyncResponseId) => {
   // asyncResponseId = 1533889926#870a3f17-3e21-b6ad-f63d-5cfe
@@ -232,12 +232,12 @@ endpoint.execute(path, (status) => {
   // err - exception object or status code
 });
 ```
-<a name="Endpoint+observe"></a>
+<a name="Device+observe"></a>
 
-### endpoint.observe(path, callback) ⇒ <code>Promise</code>
+### device.observe(path, callback) ⇒ <code>Promise</code>
 Sends request to subscribe to resource.
 
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
+**Kind**: instance method of [<code>Device</code>](#Device)  
 **Returns**: <code>Promise</code> - Promise with async response id  
 
 | Param | Type | Description |
@@ -247,7 +247,7 @@ Sends request to subscribe to resource.
 
 **Example**  
 ```js
-endpoint.observe(path, (status, payload) => {
+device.observe(path, (status, payload) => {
   // status = 200
   // payload = 4RbaAA==
 }).then((asyncResponseId) => {
@@ -256,12 +256,12 @@ endpoint.observe(path, (status, payload) => {
   // err - exception object or status code
 });
 ```
-<a name="Endpoint+cancelObserve"></a>
+<a name="Device+cancelObserve"></a>
 
-### endpoint.cancelObserve(path) ⇒ <code>Promise</code>
+### device.cancelObserve(path) ⇒ <code>Promise</code>
 Sends request to cancel subscriptions.
 
-**Kind**: instance method of [<code>Endpoint</code>](#Endpoint)  
+**Kind**: instance method of [<code>Device</code>](#Device)  
 **Returns**: <code>Promise</code> - Promise with HTTP status code  
 
 | Param | Type | Description |
@@ -270,7 +270,7 @@ Sends request to cancel subscriptions.
 
 **Example**  
 ```js
-endpoint.cancelObserve(path).then((status) => {
+device.cancelObserve(path).then((status) => {
   // status - status code
 }).catch((err) => {
   // err - exception object

@@ -7,17 +7,17 @@ const parser = require('body-parser');
 const ip = require('ip');
 
 /**
- * This class represents endpoint (device).
+ * This class represents device (endpoint).
    * @example
    * const restAPI = require('restserver-api');
    *
    * const service = new restAPI.Service(serviceOptions);
-   * const endpoint = new restAPI.Endpoint(service, 'endpointId');
+   * const device = new restAPI.Device(service, 'deviceId');
  */
-class Endpoint extends EventEmitter {
+class Device extends EventEmitter {
   /**
-   * Constructor initiliazes given service object, endpoint's id
-   * and starts listening for events emited by service (when endpoint
+   * Constructor initiliazes given service object, device's id
+   * and starts listening for events emited by service (when device
    * registers, updates, deregisters, sends data), handles "async
    * responses" and emits "register", "update", "deregister" events.
    * @constructor
@@ -66,10 +66,10 @@ class Endpoint extends EventEmitter {
   }
 
   /**
-   * Sends request to get all endpoint's objects.
-   * @returns {Promise} Promise object with endpoint's objects
+   * Sends request to get all device's objects.
+   * @returns {Promise} Promise object with device's objects
    * @example
-   * endpoint.getObjects().then((resp) => {
+   * device.getObjects().then((resp) => {
    *   // resp = [ { uri: '/1/0' }, { uri: '/2/0' }, ... ]
    * }).catch((err) => {
    *   // err - exception message object or status code
@@ -91,7 +91,7 @@ class Endpoint extends EventEmitter {
 
   /**
    * Adds a callback to transactions list.
-   * Key value is endpoint's id.
+   * Key value is device's id.
    * @private
    * @param {string} id - Endpoint id
    * @param {function} callback - Callback which will be called when async response is received
@@ -102,12 +102,12 @@ class Endpoint extends EventEmitter {
   }
 
   /**
-   * Sends request to read endpoint's resource data.
+   * Sends request to read device's resource data.
    * @param {string} path - Resource path
    * @param {function} callback - Callback which will be called when async response is received
    * @returns {Promise} Promise with async response id
    * @example
-   * endpoint.read(path, (status, payload) => {
+   * device.read(path, (status, payload) => {
    *   // status = 200
    *   // payload = 4RbaAA==
    * }).then((asyncResponseId) => {
@@ -133,14 +133,14 @@ class Endpoint extends EventEmitter {
   }
 
   /**
-   * Sends request to write a value into endpoint's resource.
+   * Sends request to write a value into device's resource.
    * @param {string} path - Resource path
    * @param {function} callback - Callback which will be called when async response is received
    * @param {buffer} payload - Data (optional)
    * @param {string} type - Content type (optional)
    * @returns {Promise} Promise with async response id
    * @example
-   * endpoint.write(path, (status) => {
+   * device.write(path, (status) => {
    *   // status = 202
    * }, payload).then((asyncResponseId) => {
    *   // asyncResponseId = 1533889926#870a3f17-3e21-b6ad-f63d-5cfe
@@ -165,14 +165,14 @@ class Endpoint extends EventEmitter {
   }
 
   /**
-   * Sends request to execute endpoint's resource.
+   * Sends request to execute device's resource.
    * @param {string} path - Resource path
    * @param {function} callback - Callback which will be called when async response is received
    * @param {buffer} payload - Data (optional)
    * @param {string} type - Content type (optional)
    * @returns {Promise} Promise with async response id
    * @example
-   * endpoint.execute(path, (status) => {
+   * device.execute(path, (status) => {
    *   // status = 202
    * }).then((asyncResponseId) => {
    *   // asyncResponseId = 1533889926#870a3f17-3e21-b6ad-f63d-5cfe
@@ -202,7 +202,7 @@ class Endpoint extends EventEmitter {
    * @param {function} callback - Callback which will be called when async response is received
    * @returns {Promise} Promise with async response id
    * @example
-   * endpoint.observe(path, (status, payload) => {
+   * device.observe(path, (status, payload) => {
    *   // status = 200
    *   // payload = 4RbaAA==
    * }).then((asyncResponseId) => {
@@ -232,7 +232,7 @@ class Endpoint extends EventEmitter {
    * @param {string} path - Resource path
    * @returns {Promise} Promise with HTTP status code
    * @example
-   * endpoint.cancelObserve(path).then((status) => {
+   * device.cancelObserve(path).then((status) => {
    *   // status - status code
    * }).catch((err) => {
    *   // err - exception object
@@ -811,4 +811,4 @@ class Service extends EventEmitter {
 }
 
 module.exports.Service = Service;
-module.exports.Device = Endpoint;
+module.exports.Device = Device;
