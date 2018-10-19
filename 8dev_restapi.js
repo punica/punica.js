@@ -293,7 +293,9 @@ class Service extends EventEmitter {
     };
     this.authenticationToken = '';
     this.tokenValidation = 3600;
-    this.configure(opts);
+    if (opts !== undefined) {
+      this.configure(opts);
+    }
     this.ipAddress = ip.address();
     this.configureNodeRestClient();
     this.addTlvSerializer();
