@@ -1,6 +1,6 @@
 {
   "name": "restserver-api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "8devices sensor network REST server API and demo",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/8devices/restserver-api.git"
   },
   "author": "Giedrius Medzevicius <giedrius@8devices.com>",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/8devices/restserver-api/issues"
   },
@@ -33,5 +33,8 @@
     "istanbul": "^0.4.5",
     "codecov": "^3.0.0",
     "jsdoc-to-markdown": "^4.0.1"
+  },
+  "directories": {
+    "test": "tests"
   }
 }
