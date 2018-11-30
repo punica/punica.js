@@ -1,7 +1,7 @@
 {
   "name": "punica-api",
   "version": "0.1.0",
-  "description": "8devices sensor network REST server API and demo",
+  "description": "Node.js library for punica REST API",
   "main": "index.js",
   "scripts": {
     "test": "istanbul cover node_modules/mocha/bin/_mocha tests/*.test.js && codecov"
