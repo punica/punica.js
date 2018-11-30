@@ -1,6 +1,6 @@
 
 
-const restapi = require('./punica_api.js');
+const restapi = require('./punica.js');
 
 const SENSOR4400_STATE_CLOSED = 'closed';
 const SENSOR4400_STATE_OPEN = 'open';
