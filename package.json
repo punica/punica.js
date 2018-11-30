@@ -1,5 +1,5 @@
 {
-  "name": "restserver-api",
+  "name": "punica-api",
   "version": "0.1.0",
   "description": "8devices sensor network REST server API and demo",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/8devices/restserver-api.git"
+    "url": "git+https://github.com/punica/punica.js.git"
   },
   "author": "Giedrius Medzevicius <giedrius@8devices.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/8devices/restserver-api/issues"
+    "url": "https://github.com/punica/punica.js/issues"
   },
-  "homepage": "https://github.com/8devices/restserver-api#readme",
+  "homepage": "https://github.com/punica/punica.js#readme",
   "dependencies": {
     "body-parser": "^1.18.2",
     "coap": "^0.21.0",

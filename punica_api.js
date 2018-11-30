@@ -9,7 +9,7 @@ const ip = require('ip');
 /**
  * This class represents device (endpoint).
    * @example
-   * const restAPI = require('restserver-api');
+   * const restAPI = require('punica-api');
    *
    * const service = new restAPI.Service(serviceOptions);
    * const device = new restAPI.Device(service, 'deviceId');
