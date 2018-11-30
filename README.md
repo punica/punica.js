@@ -1,10 +1,10 @@
 [![Build Status](https://travis-ci.com/punica/punica.js.svg?branch=master)](https://travis-ci.com/punica/punica.js)
 [![codecov](https://codecov.io/gh/punica/punica.js/branch/master/graph/badge.svg)](https://codecov.io/gh/punica/punica.js)
-# punica-api
+# punica
 **Example program**
-This example shows basic punica-api usage.
+This example shows basic punica usage.
 ```js
-const restAPI = require('punica-api');
+const restAPI = require('punica');
 
 const { Lwm2m } = restAPI;
 const { RESOURCE_TYPE, encodeResource, decodeResource } = Lwm2m.TLV;
@@ -138,7 +138,7 @@ responses" and emits "register", "update", "deregister" events.
 
 **Example**  
 ```js
-const restAPI = require('punica-api');
+const restAPI = require('punica');
 
 const service = new restAPI.Service(serviceOptions);
 const device = new restAPI.Device(service, 'deviceId');
