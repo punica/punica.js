@@ -1,6 +1,6 @@
 
 
-const api = require('./8dev_restapi.js');
+const api = require('./punica_api.js');
 const emulate = require('./8dev_emulate/nodes/index.js');
 const lwm2m = require('./lwm2m/index.js');
 
