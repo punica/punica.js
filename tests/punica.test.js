@@ -4,7 +4,7 @@ const nock = require('nock');
 const { expect } = chai;
 const rest = require('node-rest-client');
 const response = require('./rest-response');
-const restAPI = require('../8dev_restapi.js');
+const restAPI = require('../punica.js');
 
 describe('Rest API interface', () => {
   const url = 'http://localhost:8888';

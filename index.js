@@ -1,6 +1,6 @@
 
 
-const api = require('./8dev_restapi.js');
+const api = require('./punica.js');
 const lwm2m = require('./lwm2m/index.js');
 
 module.exports.Service = api.Service;
