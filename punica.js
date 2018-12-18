@@ -459,6 +459,7 @@ class Service extends EventEmitter {
       var options = {key: this.config.privatekey, cert: this.config.certificate, ca: this.config.ca, requestCert: true, rejectUnauthorized: true};
       this.server = https.createServer(options, this.express);
       this.server.listen(this.config.port, "0.0.0.0", fulfill); // ipv4
+      this.server.on('error', reject);
     });
   }
 
