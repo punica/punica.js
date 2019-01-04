@@ -454,7 +454,7 @@ class Service extends EventEmitter {
   createServer() {
     return new Promise((fulfill, reject) => {
       let provider = http;
-      let options = {};
+      let options;
       this.express.put('/notification', (req, resp) => {
         this._processEvents(req.body);
         resp.send();
@@ -462,7 +462,13 @@ class Service extends EventEmitter {
 
       if (this.config.ca) {
         provider = https;
-        options = { key: this.config.privatekey, cert: this.config.certificate, ca: this.config.ca, requestCert: true, rejectUnauthorized: true };
+        options = {
+          key: this.config.privatekey,
+          cert: this.config.certificate,
+          ca: this.config.ca,
+          requestCert: true,
+          rejectUnauthorized: true
+        };
       }
 
       this.server = provider.createServer(options, this.express);
