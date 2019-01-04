@@ -6,6 +6,7 @@ const express = require('express');
 const parser = require('body-parser');
 const ip = require('ip');
 const https = require('https');
+const http = require('http');
 
 /**
  * This class represents device (endpoint).
@@ -452,17 +453,20 @@ class Service extends EventEmitter {
    */
   createServer() {
     return new Promise((fulfill, reject) => {
+      let provider = http;
+      let options = {};
       this.express.put('/notification', (req, resp) => {
         this._processEvents(req.body);
         resp.send();
       });
+
       if (this.config.ca) {
-        const options = { ca: this.config.ca, requestCert: true, rejectUnauthorized: true };
-        this.server = https.createServer(options, this.express);
-        this.server.listen(this.config.port, '0.0.0.0', fulfill); // ipv4
-      } else {
-        this.server = this.express.listen(this.config.port, fulfill);
+        provider = https;
+        options = { ca: this.config.ca, requestCert: true, rejectUnauthorized: true };
       }
+
+      this.server = provider.createServer(options, this.express);
+      this.server.listen(this.config.port, '0.0.0.0', fulfill); // ipv4
       this.server.on('error', reject);
     });
   }
