@@ -462,7 +462,7 @@ class Service extends EventEmitter {
 
       if (this.config.ca) {
         provider = https;
-        options = { ca: this.config.ca, requestCert: true, rejectUnauthorized: true };
+        options = { key: this.config.privatekey, cert: this.config.certificate, ca: this.config.ca, requestCert: true, rejectUnauthorized: true };
       }
 
       this.server = provider.createServer(options, this.express);
