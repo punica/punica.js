@@ -619,6 +619,136 @@ class Service extends EventEmitter {
   }
 
   /**
+   * Sends request to get all registered devices.
+   * @returns {Promise} Promise with a list of endpoints
+   * @example
+   * service.getRegisteredDevices().then((resp) => {
+   *   // resp = [{"cHNraWQx"}, {"cHNraWQy"}, {"cHNraWQz"}, ...]
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   */
+  getRegisteredDevices() {
+    return new Promise((fulfill, reject) => {
+      this.get('/devices').then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to get device's PSK ID.
+   * @returns {Promise} Promise with device's PSK ID
+   * @example
+   * const name = 'DEF';
+   * service.getRegisteredDevicePsk(name).then((resp) => {
+   *   // resp = {"cHNraWQy"}
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {string} name - Device name
+   */
+  getRegisteredDevicePsk(name) {
+    return new Promise((fulfill, reject) => {
+      this.get(`/devices/${name}`).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to register devices.
+   * @returns {Promise} Promise which fulfills when devices are registered successfully
+   * @example
+   * const devices = [{"psk":"cHNrMQ==","psk_id":"cHNraWQx","uuid":"ABC"}, ...];
+   * service.registerDevices(devices).then((resp) => {
+   *   // resp = '' (Successfully registered)
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {object} devices - Array of one or more devices
+   */
+  registerDevices(devices) {
+    return new Promise((fulfill, reject) => {
+      this.put('/devices', devices).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 201) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to edit device's credentials.
+   * @returns {Promise} Promise which fulfills when device's credentials are changed
+   * @example
+   * const name = 'DEF';
+   * const deviceData = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
+   * service.editDevice(name, deviceData).then((resp) => {
+   *   // resp = '' (Successfully edited)
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {string} name - Device name
+   * @param {object} deviceData - New device credentials
+   */
+  editDevice(name, deviceData) {
+    return new Promise((fulfill, reject) => {
+      this.post(`/devices/${name}`, deviceData).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 201) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to remove device from registered devices.
+   * @returns {Promise} Promise which fulfills when device is removed successfully
+   * @example
+   * const name = 'DEF';
+   * service.removeDevice(name).then((resp) => {
+   *   // resp = '' (Successfully removed)
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {string} name - Device name
+   */
+  removeDevice(name) {
+    return new Promise((fulfill, reject) => {
+      this.delete(`/devices/${name}`).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
    * Sends request to get REST server version.
    * @returns {Promise} Promise with REST server's version
    * @example
