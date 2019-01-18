@@ -5,6 +5,8 @@ const rest = require('node-rest-client');
 const express = require('express');
 const parser = require('body-parser');
 const ip = require('ip');
+const https = require('https');
+const http = require('http');
 
 /**
  * This class represents device (endpoint).
@@ -283,7 +285,7 @@ class Service extends EventEmitter {
     super();
     this.config = {
       host: 'http://localhost:8888',
-      ca: '',
+      ca: undefined,
       authentication: false,
       username: '',
       password: '',
@@ -455,7 +457,20 @@ class Service extends EventEmitter {
         this._processEvents(req.body);
         resp.send();
       });
-      this.server = this.express.listen(this.config.port, fulfill);
+
+      if (this.config.ca) {
+        const options = {
+          key: this.config.privatekey,
+          cert: this.config.certificate,
+          ca: this.config.ca,
+          requestCert: true,
+          rejectUnauthorized: true
+        };
+        this.server = https.createServer(options, this.express);
+      } else {
+        this.server = http.createServer(this.express);
+      }
+      this.server.listen(this.config.port, '0.0.0.0', fulfill); // ipv4
       this.server.on('error', reject);
     });
   }
@@ -502,8 +517,12 @@ class Service extends EventEmitter {
    */
   registerNotificationCallback() {
     return new Promise((fulfill, reject) => {
+      let protocol = 'http';
+      if (this.config.ca) {
+        protocol = 'https';
+      }
       const data = {
-        url: `http://${this.ipAddress}:${this.config.port}/notification`,
+        url: `${protocol}://${this.ipAddress}:${this.config.port}/notification`,
         headers: {},
       };
       const type = 'application/json';
