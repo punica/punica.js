@@ -68,6 +68,30 @@ class Device extends EventEmitter {
   }
 
   /**
+   * Sends request to get device's PSK ID.
+   * @returns {Promise} Promise with device's PSK ID
+   * @example
+   * device.getPskId().then((resp) => {
+   *   // resp = {"cHNraWQy"}
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   */
+  getPskId() {
+    return new Promise((fulfill, reject) => {
+      this.service.get(`/devices/${this.id}`).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
    * Sends request to get all device's objects.
    * @returns {Promise} Promise object with device's objects
    * @example
@@ -666,14 +690,14 @@ class Service extends EventEmitter {
    * @returns {Promise} Promise with device's PSK ID
    * @example
    * const name = 'DEF';
-   * service.getRegisteredDevicePsk(name).then((resp) => {
+   * service.getRegisteredDevicePskId(name).then((resp) => {
    *   // resp = {"cHNraWQy"}
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    * @param {string} name - Device name
    */
-  getRegisteredDevicePsk(name) {
+  getRegisteredDevicePskId(name) {
     return new Promise((fulfill, reject) => {
       this.get(`/devices/${name}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
