@@ -13,6 +13,8 @@ module.exports = {
     access_token: 'second0eXMiJ9.eyJppbiJ9.2HBtDz-bzdTPcYu-rNbwG-J9NC3P-f7kT6_YsNA',
     expires_in: 1
   },
+  psk: { psk_id: 'cHNraWQx' },
+  devices: [{ psk_id: 'cHNraWQx' }, { psk_id: 'cHNraWQy' }, { psk_id: 'cHNraWQz' }],
   endpoints: [
     {
       name: 'threeEight', type: '8dev_3800', status: 'ACTIVE', q: true,
