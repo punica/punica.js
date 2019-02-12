@@ -68,16 +68,16 @@ class Device extends EventEmitter {
   }
 
   /**
-   * Sends request to get device's PSK ID.
+   * Sends request to get device's entry.
    * @returns {Promise} Promise with device's PSK ID
    * @example
-   * device.getPskId().then((resp) => {
-   *   // resp = {"cHNraWQy"}
+   * device.getEntry().then((resp) => {
+   *   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    */
-  getPskId() {
+  getEntry() {
     return new Promise((fulfill, reject) => {
       this.service.get(`/devices/${this.id}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
@@ -662,16 +662,16 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to get all registered devices.
+   * Sends request to get all registered devices entries.
    * @returns {Promise} Promise with a list of endpoints
    * @example
-   * service.getRegisteredDevices().then((resp) => {
-   *   // resp = [{"cHNraWQx"}, {"cHNraWQy"}, {"cHNraWQz"}, ...]
+   * service.getDevicesEntries().then((resp) => {
+   *   // resp = [{"psk_id": "cHNraWQx", "uuid": "ABC"}, ...]
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    */
-  getRegisteredDevices() {
+  getDevicesEntries() {
     return new Promise((fulfill, reject) => {
       this.get('/devices').then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
@@ -691,13 +691,13 @@ class Service extends EventEmitter {
    * @example
    * const name = 'DEF';
    * service.getRegisteredDevicePskId(name).then((resp) => {
-   *   // resp = {"cHNraWQy"}
+   *   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    * @param {string} name - Device name
    */
-  getRegisteredDevicePskId(name) {
+  getDeviceEntry(name) {
     return new Promise((fulfill, reject) => {
       this.get(`/devices/${name}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
@@ -715,17 +715,17 @@ class Service extends EventEmitter {
    * Sends request to register devices.
    * @returns {Promise} Promise which fulfills when devices are registered successfully
    * @example
-   * const devices = [{"psk":"cHNrMQ==","psk_id":"cHNraWQx","uuid":"ABC"}, ...];
-   * service.registerDevices(devices).then((resp) => {
+   * const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQx"};
+   * service.registerDeviceEntry(entry).then((resp) => {
    *   // resp = '' (Successfully registered)
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
-   * @param {object} devices - Array of one or more devices
+   * @param {object} entry - A JSON object representing the device entry
    */
-  registerDevices(devices) {
+  registerDeviceEntry(entry) {
     return new Promise((fulfill, reject) => {
-      this.put('/devices', devices).then((dataAndResponse) => {
+      this.post('/devices', entry).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 201) {
           fulfill(dataAndResponse.data);
         } else {
@@ -738,22 +738,22 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to edit device's credentials.
+   * Sends request to edit device's entry.
    * @returns {Promise} Promise which fulfills when device's credentials are changed
    * @example
    * const name = 'DEF';
-   * const deviceData = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
-   * service.editDevice(name, deviceData).then((resp) => {
+   * const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
+   * service.updateDeviceEntry(name, entry).then((resp) => {
    *   // resp = '' (Successfully edited)
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    * @param {string} name - Device name
-   * @param {object} deviceData - New device credentials
+   * @param {object} entry - A JSON object with updated 'psk' and 'psk_id'
    */
-  editDevice(name, deviceData) {
+  updateDeviceEntry(name, entry) {
     return new Promise((fulfill, reject) => {
-      this.post(`/devices/${name}`, deviceData).then((dataAndResponse) => {
+      this.post(`/devices/${name}`, entry).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 201) {
           fulfill(dataAndResponse.data);
         } else {
@@ -770,14 +770,14 @@ class Service extends EventEmitter {
    * @returns {Promise} Promise which fulfills when device is removed successfully
    * @example
    * const name = 'DEF';
-   * service.removeDevice(name).then((resp) => {
+   * service.removeDeviceEntry(name).then((resp) => {
    *   // resp = '' (Successfully removed)
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    * @param {string} name - Device name
    */
-  removeDevice(name) {
+  removeDeviceEntry(name) {
     return new Promise((fulfill, reject) => {
       this.delete(`/devices/${name}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {

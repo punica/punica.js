@@ -19,13 +19,15 @@ describe('Rest API interface', () => {
   });
 
   describe('Endpoint interface', () => {
-    describe('getPskId function', () => {
-      it('should return device\'s PSK ID', () => {
+    describe('getEntry function', () => {
+      it('should return device\'s entry', () => {
         nock(url)
           .get(`/devices/${deviceName}`)
-          .reply(200, response.psk);
-        return device.getPskId().then((resp) => {
+          .reply(200, response.entry);
+        return device.getEntry().then((resp) => {
           expect(typeof resp).to.equal('object');
+          expect(resp).to.have.property('psk_id');
+          expect(resp).to.have.property('uuid');
         });
       });
 
@@ -33,13 +35,13 @@ describe('Rest API interface', () => {
         nock(url)
           .get(`/devices/${deviceName}`)
           .reply(500);
-        return device.getPskId().catch((err) => {
+        return device.getEntry().catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        device.getPskId()
+        device.getEntry()
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();
@@ -627,13 +629,15 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('getRegisteredDevices function', () => {
-      it('should return a list of registered devices', () => {
+    describe('getDevicesEntries function', () => {
+      it('should return a list of registered devices entries', () => {
         nock(url)
           .get('/devices')
-          .reply(200, response.devices);
-        return service.getRegisteredDevices().then((resp) => {
+          .reply(200, response.devicesEntries);
+        return service.getDevicesEntries().then((resp) => {
           expect(typeof resp).to.equal('object');
+          expect(resp[0]).to.have.property('psk_id');
+          expect(resp[0]).to.have.property('uuid');
         });
       });
 
@@ -641,13 +645,13 @@ describe('Rest API interface', () => {
         nock(url)
           .get('/devices')
           .reply(500);
-        return service.getRegisteredDevices().catch((err) => {
+        return service.getDevicesEntries().catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.getRegisteredDevices()
+        service.getDevicesEntries()
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();
@@ -655,14 +659,16 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('getRegisteredDevicePskId function', () => {
+    describe('getDeviceEntry function', () => {
       const name = 'threeSeven';
-      it('should return device\'s PSK ID', () => {
+      it('should return device\'s entry', () => {
         nock(url)
           .get(`/devices/${name}`)
-          .reply(200, response.psk);
-        return service.getRegisteredDevicePskId(name).then((resp) => {
+          .reply(200, response.entry);
+        return service.getDeviceEntry(name).then((resp) => {
           expect(typeof resp).to.equal('object');
+          expect(resp).to.have.property('psk_id');
+          expect(resp).to.have.property('uuid');
         });
       });
 
@@ -670,13 +676,13 @@ describe('Rest API interface', () => {
         nock(url)
           .get(`/devices/${name}`)
           .reply(500);
-        return service.getRegisteredDevicePskId(name).catch((err) => {
+        return service.getDeviceEntry(name).catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.getRegisteredDevicePskId(name)
+        service.getDeviceEntry(name)
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();
@@ -684,29 +690,28 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('registerDevices function', () => {
-      const data = [{ psk: 'cHNrMQ==', psk_id: 'cHNraWQx', uuid: 'ABC' },
-        { psk: 'cHNrMg==', psk_id: 'cHNraWQy', uuid: 'DEF' }];
+    describe('registerDeviceEntry function', () => {
+      const data = { psk: 'cHNrMQ==', psk_id: 'cHNraWQx' };
       it('should fulfill promise if registration is successfull (201)', () => {
         nock(url)
-          .put('/devices')
+          .post('/devices')
           .reply(201);
-        return service.registerDevices(data).then((resp) => {
+        return service.registerDeviceEntry(data).then((resp) => {
           expect(typeof resp).to.equal('object');
         });
       });
 
       it('should return an error (status code number) if status code is not 200', () => {
         nock(url)
-          .put('/devices')
+          .post('/devices')
           .reply(500);
-        return service.registerDevices(data).catch((err) => {
+        return service.registerDeviceEntry(data).catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.registerDevices(data)
+        service.registerDeviceEntry(data)
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();
@@ -714,14 +719,14 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('editDevice function', () => {
+    describe('updateDeviceEntry function', () => {
       const name = 'threeSeven';
-      const data = { psk: 'cHNrMQ==', psk_id: 'cHNraWQx' };
+      const entry = { psk: 'cHNrMQ==', psk_id: 'cHNraWQx' };
       it('should fulfill promise if edit is successfull (201)', () => {
         nock(url)
           .post(`/devices/${name}`)
           .reply(201);
-        return service.editDevice(name, data).then((resp) => {
+        return service.updateDeviceEntry(name, entry).then((resp) => {
           expect(typeof resp).to.equal('object');
         });
       });
@@ -730,13 +735,13 @@ describe('Rest API interface', () => {
         nock(url)
           .post(`/devices/${name}`)
           .reply(500);
-        return service.editDevice(name, data).catch((err) => {
+        return service.updateDeviceEntry(name, entry).catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.editDevice(name, data)
+        service.updateDeviceEntry(name, entry)
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();
@@ -744,13 +749,13 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('removeDevice function', () => {
+    describe('removeDeviceEntry function', () => {
       const name = 'threeSeven';
       it('should fulfill promise if remove is successfull (200)', () => {
         nock(url)
           .delete(`/devices/${name}`)
           .reply(200);
-        return service.removeDevice(name).then((resp) => {
+        return service.removeDeviceEntry(name).then((resp) => {
           expect(typeof resp).to.equal('object');
         });
       });
@@ -759,13 +764,13 @@ describe('Rest API interface', () => {
         nock(url)
           .delete(`/devices/${name}`)
           .reply(500);
-        return service.removeDevice(name).catch((err) => {
+        return service.removeDeviceEntry(name).catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.removeDevice(name)
+        service.removeDeviceEntry(name)
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();
