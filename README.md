@@ -115,7 +115,6 @@ This class represents device (endpoint).
 
 * [Device](#Device)
     * [new Device(service, id)](#new_Device_new)
-    * [.getEntry()](#Device+getEntry) ⇒ <code>Promise</code>
     * [.getObjects()](#Device+getObjects) ⇒ <code>Promise</code>
     * [.read(path, callback)](#Device+read) ⇒ <code>Promise</code>
     * [.write(path, callback, payload, type)](#Device+write) ⇒ <code>Promise</code>
@@ -143,21 +142,6 @@ const restAPI = require('punica');
 
 const service = new restAPI.Service(serviceOptions);
 const device = new restAPI.Device(service, 'deviceId');
-```
-<a name="Device+getEntry"></a>
-
-### device.getEntry() ⇒ <code>Promise</code>
-Sends request to get device's entry.
-
-**Kind**: instance method of [<code>Device</code>](#Device)  
-**Returns**: <code>Promise</code> - Promise with device's PSK ID  
-**Example**  
-```js
-device.getEntry().then((resp) => {
-  // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
-}).catch((err) => {
-  // err - exception message object or status code
-});
 ```
 <a name="Device+getObjects"></a>
 
@@ -308,12 +292,12 @@ This class represents REST API service.
     * [.deleteNotificationCallback()](#Service+deleteNotificationCallback) ⇒ <code>Promise</code>
     * [.checkNotificationCallback()](#Service+checkNotificationCallback) ⇒ <code>Promise</code>
     * [.pullNotification()](#Service+pullNotification) ⇒ <code>Promise</code>
-    * [.getDevices()](#Service+getDevices) ⇒ <code>Promise</code>
-    * [.getDevicesEntries()](#Service+getDevicesEntries) ⇒ <code>Promise</code>
-    * [.getDeviceEntry(name)](#Service+getDeviceEntry) ⇒ <code>Promise</code>
-    * [.registerDeviceEntry(entry)](#Service+registerDeviceEntry) ⇒ <code>Promise</code>
-    * [.updateDeviceEntry(name, entry)](#Service+updateDeviceEntry) ⇒ <code>Promise</code>
-    * [.removeDeviceEntry(name)](#Service+removeDeviceEntry) ⇒ <code>Promise</code>
+    * [.getConnectedDevices()](#Service+getConnectedDevices) ⇒ <code>Promise</code>
+    * [.getRegisteredDevices()](#Service+getRegisteredDevices) ⇒ <code>Promise</code>
+    * [.getRegisteredDevice(uuid)](#Service+getRegisteredDevice) ⇒ <code>Promise</code>
+    * [.createRegisteredDevice(entry)](#Service+createRegisteredDevice) ⇒ <code>Promise</code>
+    * [.updateRegistaredDevice(uuid, entry)](#Service+updateRegistaredDevice) ⇒ <code>Promise</code>
+    * [.removeRegisteredDevice(uuid)](#Service+removeRegisteredDevice) ⇒ <code>Promise</code>
     * [.getVersion()](#Service+getVersion) ⇒ <code>Promise</code>
     * [.get(path)](#Service+get) ⇒ <code>Promise</code>
     * [.put(path, argument, type)](#Service+put) ⇒ <code>Promise</code>
@@ -484,9 +468,9 @@ service.pullNotification().then((resp) => {
   // err - exception object
 });
 ```
-<a name="Service+getDevices"></a>
+<a name="Service+getConnectedDevices"></a>
 
-### service.getDevices() ⇒ <code>Promise</code>
+### service.getConnectedDevices() ⇒ <code>Promise</code>
 Sends request to get all registered endpoints.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
@@ -499,13 +483,13 @@ service.getDevices().then((resp) => {
   // err - exception message object or status code
 });
 ```
-<a name="Service+getDevicesEntries"></a>
+<a name="Service+getRegisteredDevices"></a>
 
-### service.getDevicesEntries() ⇒ <code>Promise</code>
+### service.getRegisteredDevices() ⇒ <code>Promise</code>
 Sends request to get all registered devices entries.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
-**Returns**: <code>Promise</code> - Promise with a list of endpoints  
+**Returns**: <code>Promise</code> - which fulfills with a list of registered devices  
 **Example**  
 ```js
 service.getDevicesEntries().then((resp) => {
@@ -514,31 +498,31 @@ service.getDevicesEntries().then((resp) => {
   // err - exception message object or status code
 });
 ```
-<a name="Service+getDeviceEntry"></a>
+<a name="Service+getRegisteredDevice"></a>
 
-### service.getDeviceEntry(name) ⇒ <code>Promise</code>
-Sends request to get device's PSK ID.
+### service.getRegisteredDevice(uuid) ⇒ <code>Promise</code>
+Gets device registration entry.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
-**Returns**: <code>Promise</code> - Promise with device's PSK ID  
+**Returns**: <code>Promise</code> - Promise with device's entry  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>string</code> | Device name |
+| uuid | <code>string</code> | Device uuid |
 
 **Example**  
 ```js
-const name = 'DEF';
-service.getRegisteredDevicePskId(name).then((resp) => {
+const uuid = 'DEF';
+service.getRegisteredDevicePskId(uuid).then((resp) => {
   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
 }).catch((err) => {
   // err - exception message object or status code
 });
 ```
-<a name="Service+registerDeviceEntry"></a>
+<a name="Service+createRegisteredDevice"></a>
 
-### service.registerDeviceEntry(entry) ⇒ <code>Promise</code>
-Sends request to register devices.
+### service.createRegisteredDevice(entry) ⇒ <code>Promise</code>
+Sends request to register a new device.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
 **Returns**: <code>Promise</code> - Promise which fulfills when devices are registered successfully  
@@ -551,14 +535,14 @@ Sends request to register devices.
 ```js
 const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQx"};
 service.registerDeviceEntry(entry).then((resp) => {
-  // resp = '' (Successfully registered)
+  // resp = {"psk":"cHNrMQ==","psk_id":"cHNraWQx", "uuid": "DEF"} (Successfully registered)
 }).catch((err) => {
   // err - exception message object or status code
 });
 ```
-<a name="Service+updateDeviceEntry"></a>
+<a name="Service+updateRegistaredDevice"></a>
 
-### service.updateDeviceEntry(name, entry) ⇒ <code>Promise</code>
+### service.updateRegistaredDevice(uuid, entry) ⇒ <code>Promise</code>
 Sends request to edit device's entry.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
@@ -566,22 +550,22 @@ Sends request to edit device's entry.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>string</code> | Device name |
+| uuid | <code>string</code> | Device uuid |
 | entry | <code>object</code> | A JSON object with updated 'psk' and 'psk_id' |
 
 **Example**  
 ```js
-const name = 'DEF';
+const uuid = 'DEF';
 const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
-service.updateDeviceEntry(name, entry).then((resp) => {
+service.updateDeviceEntry(uuid, entry).then((resp) => {
   // resp = '' (Successfully edited)
 }).catch((err) => {
   // err - exception message object or status code
 });
 ```
-<a name="Service+removeDeviceEntry"></a>
+<a name="Service+removeRegisteredDevice"></a>
 
-### service.removeDeviceEntry(name) ⇒ <code>Promise</code>
+### service.removeRegisteredDevice(uuid) ⇒ <code>Promise</code>
 Sends request to remove device from registered devices.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
@@ -589,12 +573,12 @@ Sends request to remove device from registered devices.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>string</code> | Device name |
+| uuid | <code>string</code> | Device uuid |
 
 **Example**  
 ```js
-const name = 'DEF';
-service.removeDeviceEntry(name).then((resp) => {
+const uuid = 'DEF';
+service.removeDeviceEntry(uuid).then((resp) => {
   // resp = '' (Successfully removed)
 }).catch((err) => {
   // err - exception message object or status code
