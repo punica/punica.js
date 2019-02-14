@@ -68,30 +68,6 @@ class Device extends EventEmitter {
   }
 
   /**
-   * Sends request to get device's entry.
-   * @returns {Promise} Promise with device's PSK ID
-   * @example
-   * device.getEntry().then((resp) => {
-   *   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
-   * }).catch((err) => {
-   *   // err - exception message object or status code
-   * });
-   */
-  getEntry() {
-    return new Promise((fulfill, reject) => {
-      this.service.get(`/devices/${this.id}`).then((dataAndResponse) => {
-        if (dataAndResponse.resp.statusCode === 200) {
-          fulfill(dataAndResponse.data);
-        } else {
-          reject(dataAndResponse.resp.statusCode);
-        }
-      }).catch((err) => {
-        reject(err);
-      });
-    });
-  }
-
-  /**
    * Sends request to get all device's objects.
    * @returns {Promise} Promise object with device's objects
    * @example
@@ -647,7 +623,7 @@ class Service extends EventEmitter {
    *   // err - exception message object or status code
    * });
    */
-  getDevices() {
+  getConnectedDevices() {
     return new Promise((fulfill, reject) => {
       this.get('/endpoints').then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
@@ -663,7 +639,7 @@ class Service extends EventEmitter {
 
   /**
    * Sends request to get all registered devices entries.
-   * @returns {Promise} Promise with a list of endpoints
+   * @returns {Promise} which fulfills with a list of registered devices
    * @example
    * service.getDevicesEntries().then((resp) => {
    *   // resp = [{"psk_id": "cHNraWQx", "uuid": "ABC"}, ...]
@@ -671,7 +647,7 @@ class Service extends EventEmitter {
    *   // err - exception message object or status code
    * });
    */
-  getDevicesEntries() {
+  getRegisteredDevices() {
     return new Promise((fulfill, reject) => {
       this.get('/devices').then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
@@ -686,20 +662,20 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to get device's PSK ID.
-   * @returns {Promise} Promise with device's PSK ID
+   * Gets device registration entry.
+   * @returns {Promise} Promise with device's entry
    * @example
-   * const name = 'DEF';
-   * service.getRegisteredDevicePskId(name).then((resp) => {
+   * const uuid = 'DEF';
+   * service.getRegisteredDevicePskId(uuid).then((resp) => {
    *   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
-   * @param {string} name - Device name
+   * @param {string} uuid - Device uuid
    */
-  getDeviceEntry(name) {
+  getRegisteredDevice(uuid) {
     return new Promise((fulfill, reject) => {
-      this.get(`/devices/${name}`).then((dataAndResponse) => {
+      this.get(`/devices/${uuid}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
           fulfill(dataAndResponse.data);
         } else {
@@ -712,18 +688,18 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to register devices.
+   * Sends request to register a new device.
    * @returns {Promise} Promise which fulfills when devices are registered successfully
    * @example
    * const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQx"};
    * service.registerDeviceEntry(entry).then((resp) => {
-   *   // resp = '' (Successfully registered)
+   *   // resp = {"psk":"cHNrMQ==","psk_id":"cHNraWQx", "uuid": "DEF"} (Successfully registered)
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    * @param {object} entry - A JSON object representing the device entry
    */
-  registerDeviceEntry(entry) {
+  createRegisteredDevice(entry) {
     return new Promise((fulfill, reject) => {
       this.post('/devices', entry).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 201) {
@@ -741,19 +717,19 @@ class Service extends EventEmitter {
    * Sends request to edit device's entry.
    * @returns {Promise} Promise which fulfills when device's credentials are changed
    * @example
-   * const name = 'DEF';
+   * const uuid = 'DEF';
    * const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
-   * service.updateDeviceEntry(name, entry).then((resp) => {
+   * service.updateDeviceEntry(uuid, entry).then((resp) => {
    *   // resp = '' (Successfully edited)
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
-   * @param {string} name - Device name
+   * @param {string} uuid - Device uuid
    * @param {object} entry - A JSON object with updated 'psk' and 'psk_id'
    */
-  updateDeviceEntry(name, entry) {
+  updateRegistaredDevice(uuid, entry) {
     return new Promise((fulfill, reject) => {
-      this.post(`/devices/${name}`, entry).then((dataAndResponse) => {
+      this.post(`/devices/${uuid}`, entry).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 201) {
           fulfill(dataAndResponse.data);
         } else {
@@ -769,17 +745,17 @@ class Service extends EventEmitter {
    * Sends request to remove device from registered devices.
    * @returns {Promise} Promise which fulfills when device is removed successfully
    * @example
-   * const name = 'DEF';
-   * service.removeDeviceEntry(name).then((resp) => {
+   * const uuid = 'DEF';
+   * service.removeDeviceEntry(uuid).then((resp) => {
    *   // resp = '' (Successfully removed)
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
-   * @param {string} name - Device name
+   * @param {string} uuid - Device uuid
    */
-  removeDeviceEntry(name) {
+  removeRegisteredDevice(uuid) {
     return new Promise((fulfill, reject) => {
-      this.delete(`/devices/${name}`).then((dataAndResponse) => {
+      this.delete(`/devices/${uuid}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
           fulfill(dataAndResponse.data);
         } else {

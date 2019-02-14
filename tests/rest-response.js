@@ -15,6 +15,7 @@ module.exports = {
   },
   entry: { psk_id: 'cHNraWQy', uuid: 'DEF' },
   devicesEntries: [{ psk_id: 'cHNraWQx', uuid: 'ABC' }, { psk_id: 'cHNraWQy', uuid: 'DEF' }, { psk_id: 'cHNraWQz', uuid: 'GHI' }],
+  createdRegisteredDevice: { psk: 'cHNrMQ==', psk_id: 'cHNraWQy', uuid: 'DEF' },
   endpoints: [
     {
       name: 'threeEight', type: '8dev_3800', status: 'ACTIVE', q: true,
