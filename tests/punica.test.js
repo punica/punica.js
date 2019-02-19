@@ -692,14 +692,14 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('updateRegistaredDevice function', () => {
+    describe('updateRegisteredDevice function', () => {
       const uuid = 'DEF';
       const entry = { psk: 'cHNrMQ==', psk_id: 'cHNraWQx' };
       it('should fulfill promise if edit is successfull (201)', () => {
         nock(url)
           .post(`/devices/${uuid}`)
           .reply(201);
-        return service.updateRegistaredDevice(uuid, entry).then((resp) => {
+        return service.updateRegisteredDevice(uuid, entry).then((resp) => {
           expect(typeof resp).to.equal('object');
         });
       });
@@ -708,13 +708,13 @@ describe('Rest API interface', () => {
         nock(url)
           .post(`/devices/${uuid}`)
           .reply(500);
-        return service.updateRegistaredDevice(uuid, entry).catch((err) => {
+        return service.updateRegisteredDevice(uuid, entry).catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.updateRegistaredDevice(uuid, entry)
+        service.updateRegisteredDevice(uuid, entry)
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();

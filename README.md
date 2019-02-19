@@ -296,7 +296,7 @@ This class represents REST API service.
     * [.getRegisteredDevices()](#Service+getRegisteredDevices) ⇒ <code>Promise</code>
     * [.getRegisteredDevice(uuid)](#Service+getRegisteredDevice) ⇒ <code>Promise</code>
     * [.createRegisteredDevice(entry)](#Service+createRegisteredDevice) ⇒ <code>Promise</code>
-    * [.updateRegistaredDevice(uuid, entry)](#Service+updateRegistaredDevice) ⇒ <code>Promise</code>
+    * [.updateRegisteredDevice(uuid, entry)](#Service+updateRegisteredDevice) ⇒ <code>Promise</code>
     * [.removeRegisteredDevice(uuid)](#Service+removeRegisteredDevice) ⇒ <code>Promise</code>
     * [.getVersion()](#Service+getVersion) ⇒ <code>Promise</code>
     * [.get(path)](#Service+get) ⇒ <code>Promise</code>
@@ -477,7 +477,7 @@ Sends request to get all registered endpoints.
 **Returns**: <code>Promise</code> - Promise with a list of endpoints  
 **Example**  
 ```js
-service.getDevices().then((resp) => {
+service.getConnectedDevices().then((resp) => {
   // resp = [ { name: 'uuid-4567', type: '8dev_3700', ... }, ... ]
 }).catch((err) => {
   // err - exception message object or status code
@@ -492,7 +492,7 @@ Sends request to get all registered devices entries.
 **Returns**: <code>Promise</code> - which fulfills with a list of registered devices  
 **Example**  
 ```js
-service.getDevicesEntries().then((resp) => {
+service.getRegisteredDevices().then((resp) => {
   // resp = [{"psk_id": "cHNraWQx", "uuid": "ABC"}, ...]
 }).catch((err) => {
   // err - exception message object or status code
@@ -513,7 +513,7 @@ Gets device registration entry.
 **Example**  
 ```js
 const uuid = 'DEF';
-service.getRegisteredDevicePskId(uuid).then((resp) => {
+service.getRegisteredDevice(uuid).then((resp) => {
   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
 }).catch((err) => {
   // err - exception message object or status code
@@ -534,15 +534,15 @@ Sends request to register a new device.
 **Example**  
 ```js
 const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQx"};
-service.registerDeviceEntry(entry).then((resp) => {
+service.createRegisteredDevice(entry).then((resp) => {
   // resp = {"psk":"cHNrMQ==","psk_id":"cHNraWQx", "uuid": "DEF"} (Successfully registered)
 }).catch((err) => {
   // err - exception message object or status code
 });
 ```
-<a name="Service+updateRegistaredDevice"></a>
+<a name="Service+updateRegisteredDevice"></a>
 
-### service.updateRegistaredDevice(uuid, entry) ⇒ <code>Promise</code>
+### service.updateRegisteredDevice(uuid, entry) ⇒ <code>Promise</code>
 Sends request to edit device's entry.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
@@ -557,7 +557,7 @@ Sends request to edit device's entry.
 ```js
 const uuid = 'DEF';
 const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
-service.updateDeviceEntry(uuid, entry).then((resp) => {
+service.updateRegisteredDevice(uuid, entry).then((resp) => {
   // resp = '' (Successfully edited)
 }).catch((err) => {
   // err - exception message object or status code
@@ -578,7 +578,7 @@ Sends request to remove device from registered devices.
 **Example**  
 ```js
 const uuid = 'DEF';
-service.removeDeviceEntry(uuid).then((resp) => {
+service.removeRegisteredDevice(uuid).then((resp) => {
   // resp = '' (Successfully removed)
 }).catch((err) => {
   // err - exception message object or status code
