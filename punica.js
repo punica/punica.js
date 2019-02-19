@@ -614,7 +614,8 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to get all registered endpoints.
+   * Sends request to get all registered endpoints, that are 
+   * currently registered to the LwM2M service.
    * @returns {Promise} Promise with a list of endpoints
    * @example
    * service.getConnectedDevices().then((resp) => {
@@ -638,7 +639,7 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to get all registered devices entries.
+   * Sends request to get all registered device entries.
    * @returns {Promise} which fulfills with a list of registered devices
    * @example
    * service.getRegisteredDevices().then((resp) => {

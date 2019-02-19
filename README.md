@@ -471,7 +471,8 @@ service.pullNotification().then((resp) => {
 <a name="Service+getConnectedDevices"></a>
 
 ### service.getConnectedDevices() ⇒ <code>Promise</code>
-Sends request to get all registered endpoints.
+Sends request to get all registered endpoints, that are 
+currently registered to the LwM2M service.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
 **Returns**: <code>Promise</code> - Promise with a list of endpoints  
@@ -486,7 +487,7 @@ service.getConnectedDevices().then((resp) => {
 <a name="Service+getRegisteredDevices"></a>
 
 ### service.getRegisteredDevices() ⇒ <code>Promise</code>
-Sends request to get all registered devices entries.
+Sends request to get all registered device entries.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
 **Returns**: <code>Promise</code> - which fulfills with a list of registered devices  
