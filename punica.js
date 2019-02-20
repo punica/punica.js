@@ -614,7 +614,7 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to get all registered endpoints, that are 
+   * Sends request to get all registered endpoints, that are
    * currently registered to the LwM2M service.
    * @returns {Promise} Promise with a list of endpoints
    * @example
