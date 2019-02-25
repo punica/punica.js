@@ -13,6 +13,9 @@ module.exports = {
     access_token: 'second0eXMiJ9.eyJppbiJ9.2HBtDz-bzdTPcYu-rNbwG-J9NC3P-f7kT6_YsNA',
     expires_in: 1
   },
+  entry: { psk_id: 'cHNraWQy', uuid: 'DEF' },
+  devicesEntries: [{ psk_id: 'cHNraWQx', uuid: 'ABC' }, { psk_id: 'cHNraWQy', uuid: 'DEF' }, { psk_id: 'cHNraWQz', uuid: 'GHI' }],
+  createdRegisteredDevice: { psk: 'cHNrMQ==', psk_id: 'cHNraWQy', uuid: 'DEF' },
   endpoints: [
     {
       name: 'threeEight', type: '8dev_3800', status: 'ACTIVE', q: true,

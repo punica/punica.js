@@ -614,18 +614,149 @@ class Service extends EventEmitter {
   }
 
   /**
-   * Sends request to get all registered endpoints.
+   * Sends request to get all registered endpoints, that are
+   * currently registered to the LwM2M service.
    * @returns {Promise} Promise with a list of endpoints
    * @example
-   * service.getDevices().then((resp) => {
+   * service.getConnectedDevices().then((resp) => {
    *   // resp = [ { name: 'uuid-4567', type: '8dev_3700', ... }, ... ]
    * }).catch((err) => {
    *   // err - exception message object or status code
    * });
    */
-  getDevices() {
+  getConnectedDevices() {
     return new Promise((fulfill, reject) => {
       this.get('/endpoints').then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to get all registered device entries.
+   * @returns {Promise} which fulfills with a list of registered devices
+   * @example
+   * service.getRegisteredDevices().then((resp) => {
+   *   // resp = [{"psk_id": "cHNraWQx", "uuid": "ABC"}, ...]
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   */
+  getRegisteredDevices() {
+    return new Promise((fulfill, reject) => {
+      this.get('/devices').then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Gets device registration entry.
+   * @returns {Promise} Promise with device's entry
+   * @example
+   * const uuid = 'DEF';
+   * service.getRegisteredDevice(uuid).then((resp) => {
+   *   // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {string} uuid - Device uuid
+   */
+  getRegisteredDevice(uuid) {
+    return new Promise((fulfill, reject) => {
+      this.get(`/devices/${uuid}`).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 200) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to register a new device.
+   * @returns {Promise} Promise which fulfills when devices are registered successfully
+   * @example
+   * const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQx"};
+   * service.createRegisteredDevice(entry).then((resp) => {
+   *   // resp = {"psk":"cHNrMQ==","psk_id":"cHNraWQx", "uuid": "DEF"} (Successfully registered)
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {object} entry - A JSON object representing the device entry
+   */
+  createRegisteredDevice(entry) {
+    return new Promise((fulfill, reject) => {
+      this.post('/devices', entry).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 201) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to edit device's entry.
+   * @returns {Promise} Promise which fulfills when device's credentials are changed
+   * @example
+   * const uuid = 'DEF';
+   * const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
+   * service.updateRegisteredDevice(uuid, entry).then((resp) => {
+   *   // resp = '' (Successfully edited)
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {string} uuid - Device uuid
+   * @param {object} entry - A JSON object with updated 'psk' and 'psk_id'
+   */
+  updateRegisteredDevice(uuid, entry) {
+    return new Promise((fulfill, reject) => {
+      this.post(`/devices/${uuid}`, entry).then((dataAndResponse) => {
+        if (dataAndResponse.resp.statusCode === 201) {
+          fulfill(dataAndResponse.data);
+        } else {
+          reject(dataAndResponse.resp.statusCode);
+        }
+      }).catch((err) => {
+        reject(err);
+      });
+    });
+  }
+
+  /**
+   * Sends request to remove device from registered devices.
+   * @returns {Promise} Promise which fulfills when device is removed successfully
+   * @example
+   * const uuid = 'DEF';
+   * service.removeRegisteredDevice(uuid).then((resp) => {
+   *   // resp = '' (Successfully removed)
+   * }).catch((err) => {
+   *   // err - exception message object or status code
+   * });
+   * @param {string} uuid - Device uuid
+   */
+  removeRegisteredDevice(uuid) {
+    return new Promise((fulfill, reject) => {
+      this.delete(`/devices/${uuid}`).then((dataAndResponse) => {
         if (dataAndResponse.resp.statusCode === 200) {
           fulfill(dataAndResponse.data);
         } else {

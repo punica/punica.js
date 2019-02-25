@@ -566,12 +566,12 @@ describe('Rest API interface', () => {
       });
     });
 
-    describe('getDevices function', () => {
+    describe('getConnectedDevices function', () => {
       it('should return an array of all endponts with their data', () => {
         nock(url)
           .get('/endpoints')
           .reply(200, response.getEndpoints);
-        return service.getDevices().then((resp) => {
+        return service.getConnectedDevices().then((resp) => {
           expect(typeof resp).to.equal('object');
           expect(resp).to.be.a('array');
           expect(resp[0]).to.have.property('name');
@@ -585,13 +585,165 @@ describe('Rest API interface', () => {
         nock(url)
           .get('/endpoints')
           .reply(404);
-        return service.getDevices().catch((err) => {
+        return service.getConnectedDevices().catch((err) => {
           expect(typeof err).to.equal('number');
         });
       });
 
       it('should return rejected promise with exception object if connection is not succesfull', (done) => {
-        service.getDevices()
+        service.getConnectedDevices()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('getRegisteredDevices function', () => {
+      it('should return a list of registered devices entries', () => {
+        nock(url)
+          .get('/devices')
+          .reply(200, response.devicesEntries);
+        return service.getRegisteredDevices().then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp[0]).to.have.property('psk_id');
+          expect(resp[0]).to.have.property('uuid');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 200', () => {
+        nock(url)
+          .get('/devices')
+          .reply(500);
+        return service.getRegisteredDevices().catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.getRegisteredDevices()
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('getRegisteredDevice function', () => {
+      const uuid = 'DEF';
+      it('should return device\'s entry', () => {
+        nock(url)
+          .get(`/devices/${uuid}`)
+          .reply(200, response.entry);
+        return service.getRegisteredDevice(uuid).then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp).to.have.property('psk_id');
+          expect(resp).to.have.property('uuid');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 200', () => {
+        nock(url)
+          .get(`/devices/${uuid}`)
+          .reply(500);
+        return service.getRegisteredDevice(uuid).catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.getRegisteredDevice(uuid)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('createRegisteredDevice function', () => {
+      const data = { psk: 'cHNrMQ==', psk_id: 'cHNraWQx' };
+      it('should fulfill promise and return device info if registration is successfull (201)', () => {
+        nock(url)
+          .post('/devices')
+          .reply(201, response.createdRegisteredDevice);
+        return service.createRegisteredDevice(data).then((resp) => {
+          expect(typeof resp).to.equal('object');
+          expect(resp).to.have.property('psk');
+          expect(resp).to.have.property('psk_id');
+          expect(resp).to.have.property('uuid');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 200', () => {
+        nock(url)
+          .post('/devices')
+          .reply(500);
+        return service.createRegisteredDevice(data).catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.createRegisteredDevice(data)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('updateRegisteredDevice function', () => {
+      const uuid = 'DEF';
+      const entry = { psk: 'cHNrMQ==', psk_id: 'cHNraWQx' };
+      it('should fulfill promise if edit is successfull (201)', () => {
+        nock(url)
+          .post(`/devices/${uuid}`)
+          .reply(201);
+        return service.updateRegisteredDevice(uuid, entry).then((resp) => {
+          expect(typeof resp).to.equal('object');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 200', () => {
+        nock(url)
+          .post(`/devices/${uuid}`)
+          .reply(500);
+        return service.updateRegisteredDevice(uuid, entry).catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.updateRegisteredDevice(uuid, entry)
+          .catch((err) => {
+            expect(typeof err).to.equal('object');
+            done();
+          });
+      });
+    });
+
+    describe('removeRegisteredDevice function', () => {
+      const uuid = 'DEF';
+      it('should fulfill promise if remove is successfull (200)', () => {
+        nock(url)
+          .delete(`/devices/${uuid}`)
+          .reply(200);
+        return service.removeRegisteredDevice(uuid).then((resp) => {
+          expect(typeof resp).to.equal('object');
+        });
+      });
+
+      it('should return an error (status code number) if status code is not 200', () => {
+        nock(url)
+          .delete(`/devices/${uuid}`)
+          .reply(500);
+        return service.removeRegisteredDevice(uuid).catch((err) => {
+          expect(typeof err).to.equal('number');
+        });
+      });
+
+      it('should return rejected promise with exception object if connection is not succesfull', (done) => {
+        service.removeRegisteredDevice(uuid)
           .catch((err) => {
             expect(typeof err).to.equal('object');
             done();

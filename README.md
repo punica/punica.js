@@ -292,7 +292,12 @@ This class represents REST API service.
     * [.deleteNotificationCallback()](#Service+deleteNotificationCallback) ⇒ <code>Promise</code>
     * [.checkNotificationCallback()](#Service+checkNotificationCallback) ⇒ <code>Promise</code>
     * [.pullNotification()](#Service+pullNotification) ⇒ <code>Promise</code>
-    * [.getDevices()](#Service+getDevices) ⇒ <code>Promise</code>
+    * [.getConnectedDevices()](#Service+getConnectedDevices) ⇒ <code>Promise</code>
+    * [.getRegisteredDevices()](#Service+getRegisteredDevices) ⇒ <code>Promise</code>
+    * [.getRegisteredDevice(uuid)](#Service+getRegisteredDevice) ⇒ <code>Promise</code>
+    * [.createRegisteredDevice(entry)](#Service+createRegisteredDevice) ⇒ <code>Promise</code>
+    * [.updateRegisteredDevice(uuid, entry)](#Service+updateRegisteredDevice) ⇒ <code>Promise</code>
+    * [.removeRegisteredDevice(uuid)](#Service+removeRegisteredDevice) ⇒ <code>Promise</code>
     * [.getVersion()](#Service+getVersion) ⇒ <code>Promise</code>
     * [.get(path)](#Service+get) ⇒ <code>Promise</code>
     * [.put(path, argument, type)](#Service+put) ⇒ <code>Promise</code>
@@ -463,17 +468,119 @@ service.pullNotification().then((resp) => {
   // err - exception object
 });
 ```
-<a name="Service+getDevices"></a>
+<a name="Service+getConnectedDevices"></a>
 
-### service.getDevices() ⇒ <code>Promise</code>
-Sends request to get all registered endpoints.
+### service.getConnectedDevices() ⇒ <code>Promise</code>
+Sends request to get all registered endpoints, that are 
+currently registered to the LwM2M service.
 
 **Kind**: instance method of [<code>Service</code>](#Service)  
 **Returns**: <code>Promise</code> - Promise with a list of endpoints  
 **Example**  
 ```js
-service.getDevices().then((resp) => {
+service.getConnectedDevices().then((resp) => {
   // resp = [ { name: 'uuid-4567', type: '8dev_3700', ... }, ... ]
+}).catch((err) => {
+  // err - exception message object or status code
+});
+```
+<a name="Service+getRegisteredDevices"></a>
+
+### service.getRegisteredDevices() ⇒ <code>Promise</code>
+Sends request to get all registered device entries.
+
+**Kind**: instance method of [<code>Service</code>](#Service)  
+**Returns**: <code>Promise</code> - which fulfills with a list of registered devices  
+**Example**  
+```js
+service.getRegisteredDevices().then((resp) => {
+  // resp = [{"psk_id": "cHNraWQx", "uuid": "ABC"}, ...]
+}).catch((err) => {
+  // err - exception message object or status code
+});
+```
+<a name="Service+getRegisteredDevice"></a>
+
+### service.getRegisteredDevice(uuid) ⇒ <code>Promise</code>
+Gets device registration entry.
+
+**Kind**: instance method of [<code>Service</code>](#Service)  
+**Returns**: <code>Promise</code> - Promise with device's entry  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uuid | <code>string</code> | Device uuid |
+
+**Example**  
+```js
+const uuid = 'DEF';
+service.getRegisteredDevice(uuid).then((resp) => {
+  // resp = {"psk_id": "cHNraWQy", "uuid": "DEF"}
+}).catch((err) => {
+  // err - exception message object or status code
+});
+```
+<a name="Service+createRegisteredDevice"></a>
+
+### service.createRegisteredDevice(entry) ⇒ <code>Promise</code>
+Sends request to register a new device.
+
+**Kind**: instance method of [<code>Service</code>](#Service)  
+**Returns**: <code>Promise</code> - Promise which fulfills when devices are registered successfully  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| entry | <code>object</code> | A JSON object representing the device entry |
+
+**Example**  
+```js
+const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQx"};
+service.createRegisteredDevice(entry).then((resp) => {
+  // resp = {"psk":"cHNrMQ==","psk_id":"cHNraWQx", "uuid": "DEF"} (Successfully registered)
+}).catch((err) => {
+  // err - exception message object or status code
+});
+```
+<a name="Service+updateRegisteredDevice"></a>
+
+### service.updateRegisteredDevice(uuid, entry) ⇒ <code>Promise</code>
+Sends request to edit device's entry.
+
+**Kind**: instance method of [<code>Service</code>](#Service)  
+**Returns**: <code>Promise</code> - Promise which fulfills when device's credentials are changed  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uuid | <code>string</code> | Device uuid |
+| entry | <code>object</code> | A JSON object with updated 'psk' and 'psk_id' |
+
+**Example**  
+```js
+const uuid = 'DEF';
+const entry = {"psk":"cHNrMQ==","psk_id":"cHNraWQa"};
+service.updateRegisteredDevice(uuid, entry).then((resp) => {
+  // resp = '' (Successfully edited)
+}).catch((err) => {
+  // err - exception message object or status code
+});
+```
+<a name="Service+removeRegisteredDevice"></a>
+
+### service.removeRegisteredDevice(uuid) ⇒ <code>Promise</code>
+Sends request to remove device from registered devices.
+
+**Kind**: instance method of [<code>Service</code>](#Service)  
+**Returns**: <code>Promise</code> - Promise which fulfills when device is removed successfully  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| uuid | <code>string</code> | Device uuid |
+
+**Example**  
+```js
+const uuid = 'DEF';
+service.removeRegisteredDevice(uuid).then((resp) => {
+  // resp = '' (Successfully removed)
 }).catch((err) => {
   // err - exception message object or status code
 });
